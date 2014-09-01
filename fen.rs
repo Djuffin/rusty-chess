@@ -187,7 +187,10 @@ fn parse_board(iter: &mut Chars) -> Result<Board, String> {
         let mut file = 0i;
         while file < 8 {
             let sq = Square::new(file as u8, rank as u8);
-            let c = try!(read_char(iter, format!("Can't read square {0}", sq)));
+            let c = match iter.next() {
+                Some(c) => c,
+                None => return Err(format!("Can't read square {0}", sq))
+            };
             match parse_empty_squares(c) {
                 Some(n) => {
                     if n + file > 8 {
@@ -246,11 +249,3 @@ fn expect_char(iter :&mut Chars, expected:char, err_msg:String) -> Result<(), St
         _ => Err(err_msg) 
     }    
 }
-
-fn read_char(iter :&mut Chars, err_msg:String) -> Result<char, String> {
-    match iter.next() {
-        Some(c) => Ok(c),
-        None => Err(err_msg)
-    }
-}
-
