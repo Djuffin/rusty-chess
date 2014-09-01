@@ -3,9 +3,9 @@
 #![feature(globs)]
 use play::*;
 
-mod play;
-mod bitset;
-mod fen;
+pub mod play;
+pub mod bitset;
+pub mod fen;
 
 pub fn main() {
     
@@ -29,5 +29,10 @@ pub fn main() {
         black_castling : BothCastling
     };
     println!("{0}", fen::render_fen(&p));
-    //println!("{0}", self::play::BitSet { bits: 0xFFFFFFFFFFFFFFFFu64 });
+
+    let fen = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq e3 134 231";
+    match fen::parse_fen(fen) {
+        Ok(p) => println!("{0}", fen::render_fen(&p)),
+        Err(s) => println!("Error: {0}", s)        
+    }
 }

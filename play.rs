@@ -147,8 +147,6 @@ impl Board {
 
     pub fn set_piece(&mut self, sq:Square, p:Piece) {
         let Piece(kind, color) = p;
-        self.whites .set(sq, false);
-        self.blacks .set(sq, false);
         self.pawns  .set(sq, false);
         self.bishops.set(sq, false);
         self.knights.set(sq, false);
@@ -166,11 +164,8 @@ impl Board {
         };
         piece_set.set(sq, true);
 
-        let color_set = match color {
-            White => &mut self.whites,
-            Black => &mut self.blacks
-        };
-        color_set.set(sq, true);
+        self.whites.set(sq, color == White);
+        self.blacks.set(sq, color == Black);
     }
 
     pub fn get_piece(&self, sq:Square) -> Option<Piece> {
