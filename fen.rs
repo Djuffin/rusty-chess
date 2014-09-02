@@ -140,10 +140,11 @@ fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
         c => return Err(format!("Unexpected en passant value: {0}", c))
     };
     let rank = match iter.next() {
-        Some(c) if c >= '1' && c <= '8' => (c as u32) - ('1' as u32),
+        Some('3') => 2u8,
+        Some('6') => 5u8,
         c => return Err(format!("Unexpected en passant value: {0}", c))
     };
-    Ok(Some(Square::new(file as u8, rank as u8))) 
+    Ok(Some(Square::new(file as u8, rank))) 
 }
 
 fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), String> {
@@ -268,7 +269,7 @@ fn parse_render_fens() {
         "r2q1rk1/1p1nbppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/2KR1B1R w - - 5 11",
         "8/8/8/8/8/8/8/8 w - - 777 999",
         "r3k3/8/8/8/8/8/8/4K2R w Kq - 0 1",
-        "pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp b Qk a1 23 21"        
+        "pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp b Qk a3 23 21"        
     ];   
 
     for &fen in test_fens.iter() {
