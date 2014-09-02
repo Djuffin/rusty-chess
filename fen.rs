@@ -1,7 +1,7 @@
 use std::str::{Chars, StrSlice};
 use std::string::String;
 use std::iter::range_step;
-use play::*;
+use types::*;
 
 //Forsyth–Edwards Notation
 //Serialization of position into something like this:

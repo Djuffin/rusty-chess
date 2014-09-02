@@ -1,6 +1,6 @@
 use std::fmt;
 use std::iter::range_step;
-use play::Square;
+use types::Square;
 
 #[deriving(PartialEq, Clone)]
 pub struct BitSet {

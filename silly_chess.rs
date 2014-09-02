@@ -1,9 +1,9 @@
 #![crate_name = "silly-chess"]
 #![crate_type = "bin"]
 #![feature(globs)]
-use play::*;
+use types::*;
 
-pub mod play;
+pub mod types;
 pub mod bitset;
 pub mod fen;
 
