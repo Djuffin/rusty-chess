@@ -8,7 +8,7 @@ use play::*;
 //rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2
 pub fn render_fen(p:&Position) -> String {
     //rendering board rank by rank
-    let mut result =  String::with_capacity(80);
+    let mut result =  String::with_capacity(90);
     for i in range_step(7i, -1, -1) {
         render_rank(&p.board, i as u8, &mut result);
         if i > 0 { result.push_char('/'); }
@@ -49,11 +49,11 @@ pub fn render_fen(p:&Position) -> String {
 
 fn render_castling(color:Color, cr:CastlingRight, result: &mut String) {
     let s = match (color, cr) {
-        (White, QueenCastling) => "K", 
-        (White, KingCastling)  => "Q",
+        (White, QueenCastling) => "Q", 
+        (White, KingCastling)  => "K",
         (White, BothCastling)  => "KQ",
-        (Black, QueenCastling) => "k", 
-        (Black, KingCastling)  => "q",
+        (Black, QueenCastling) => "q", 
+        (Black, KingCastling)  => "k",
         (Black, BothCastling)  => "kq",
         (_, NoCastling) => ""
     };
@@ -157,7 +157,10 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
             Some('q') => black_queen = true,
             Some('Q') => white_queen = true,
             Some('-') if !(white_king && white_queen && black_queen && black_king) => 
-                { return Ok ((NoCastling, NoCastling)) }
+                { 
+                    try!(expect_char(iter, ' ', "Space is expected after next to castling".to_string()));
+                    return Ok ((NoCastling, NoCastling)) 
+                }
             Some(' ') => break,
             c => { return Err(format!("Unexpected castling configuration {0}", c)) } 
         };
@@ -248,4 +251,34 @@ fn expect_char(iter :&mut Chars, expected:char, err_msg:String) -> Result<(), St
         Some(c) if c == expected => Ok (()),
         _ => Err(err_msg) 
     }    
+}
+
+#[cfg(test)]
+mod tests {
+use fen::{render_fen, parse_fen};
+
+#[test]
+fn parse_render_fens() {
+    let test_fens = [
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1",
+        "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2",
+        "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
+        "rn1q1rk1/1p2bppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/R3KB1R w KQ - 3 10",
+        "r2q1rk1/1p1nbppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/2KR1B1R w - - 5 11",
+        "8/8/8/8/8/8/8/8 w - - 777 999",
+        "r3k3/8/8/8/8/8/8/4K2R w Kq - 0 1",
+        "pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp b Qk a1 23 21"        
+    ];   
+
+    for &fen in test_fens.iter() {
+        let position = match parse_fen(fen) {
+            Ok(p) => p,
+            Err(err) => fail!(format!("Failed to parse fen '{0}' with error '{1}'", fen, err))
+        };
+        let fen2 = render_fen(&position);
+        assert_eq!(fen, fen2.as_slice());
+    }
+} 
+
 }
