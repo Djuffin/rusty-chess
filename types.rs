@@ -147,27 +147,18 @@ impl Board {
 
     pub fn set_piece(&mut self, sq:Square, p:Piece) {
         let Piece(kind, color) = p;
-        self.pawns  .set(sq, false);
-        self.bishops.set(sq, false);
-        self.knights.set(sq, false);
-        self.rooks  .set(sq, false);
-        self.queens .set(sq, false);
-        self.kings  .set(sq, false);
-        
-        let piece_set = match kind {
-            Pawn   => &mut self.pawns,
-            Bishop => &mut self.bishops,
-            Knight => &mut self.knights,
-            Rook   => &mut self.rooks,
-            Queen  => &mut self.queens,
-            King   => &mut self.kings,
-        };
-        piece_set.set(sq, true);
+        self.pawns  .set(sq, kind == Pawn);
+        self.bishops.set(sq, kind == Bishop);
+        self.knights.set(sq, kind == Knight);
+        self.rooks  .set(sq, kind == Rook);
+        self.queens .set(sq, kind == Queen);
+        self.kings  .set(sq, kind == King);
 
-        self.whites.set(sq, color == White);
-        self.blacks.set(sq, color == Black);
+        self.whites .set(sq, color == White);
+        self.blacks .set(sq, color == Black);
     }
 
+    //retutns a piece located at a given square (if any)
     pub fn get_piece(&self, sq:Square) -> Option<Piece> {
         let sq_bits = BitSet::from_one_square(sq);
         let color = if !(self.whites & sq_bits).is_empty() {
@@ -194,6 +185,38 @@ impl Board {
             unreachable!()
         }
     }
+
+    //returns a list of squares containing pieces of given kind and color
+    pub fn get_pieces(&self, kind: Kind, color: Color) -> Vec<Square> {
+        let pieces_bitset = self.get_piece_bitset(kind);
+        let color_bitset = match color {
+            White => self.whites,
+            Black => self.blacks
+        };
+        let mut result_bitmask = (pieces_bitset & color_bitset).bits;
+        let size = result_bitmask.count_ones();
+        let mut result: Vec<Square> = Vec::with_capacity(size as uint);
+
+        for i in range(0, size) {
+            let least_sig_bit = result_bitmask.trailing_zeros();
+            result.push(Square(least_sig_bit as u8));
+            result_bitmask &= result_bitmask - 1; //least significant bit
+        }
+        result
+    }
+
+    #[inline]
+    fn get_piece_bitset<'a>(&'a self, kind:Kind) -> &'a BitSet {
+        match kind {
+            Pawn   => &self.pawns,
+            Bishop => &self.bishops,
+            Knight => &self.knights,
+            Rook   => &self.rooks,
+            Queen  => &self.queens,
+            King   => &self.kings,
+        }
+    }
+
 }
 
 impl fmt::Show for Board {
@@ -226,3 +249,43 @@ pub struct Position {
 
 }
 
+
+#[cfg(test)]
+mod tests {
+use fen::parse_fen;
+use types::*;
+
+#[test]
+fn get_pieces_test() {
+    let initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    let initial_position = parse_fen(initial_fen).unwrap();
+
+    let white_pawns = initial_position.board.get_pieces(Pawn, White);
+    assert_eq!("[a2, b2, c2, d2, e2, f2, g2, h2]", white_pawns.to_string().as_slice());
+
+    let black_knights = initial_position.board.get_pieces(Knight, Black);
+    assert_eq!("[b8, g8]", black_knights.to_string().as_slice());
+
+    for &color in [White, Black].iter() {
+        for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
+            let board = initial_position.board;
+            let squares = board.get_pieces(kind, color);
+            for &sq in squares.iter() {
+                assert_eq!(board.get_piece(sq), Some(Piece(kind, color)));
+            }
+        }
+    }
+
+    let mut empty_fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
+    let mut empty_position = parse_fen(empty_fen).unwrap();
+    for &color in [White, Black].iter() {
+        for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
+            let empty_list = empty_position.board.get_pieces(kind, color);
+            assert_eq!(empty_list.len(), 0);
+        }
+    }
+
+
+} 
+
+}
