@@ -13,6 +13,15 @@ impl BitSet {
         BitSet { bits: 0 }
     }
 
+    pub fn new(bits:u64) -> BitSet {
+        BitSet { bits: bits }
+    }
+
+    #[inline]
+    pub fn transpose(self) -> BitSet {
+        BitSet { bits: ::utils::transpose(self.bits) }
+    }
+
     #[inline]
     pub fn from_one_square(sq: Square) -> BitSet {
         BitSet { bits : 1u64 << sq.file_and_rank() as uint }
@@ -31,6 +40,30 @@ impl BitSet {
         } else {
             self.bits &= !s.bits 
         }
+    }
+
+    #[inline]
+    pub fn get_file(self, file:u8) -> u8 {
+        (::utils::transpose(self.bits) >> (file * 8u8) as uint) as u8
+    }
+
+    #[inline]
+    pub fn get_rank(self, rank:u8) -> u8 {
+        (self.bits >> (rank * 8u8) as uint) as u8
+    }
+
+    #[inline]
+    pub fn get_active_squares(self) -> Vec<Square> {
+        let mut bits = self.bits;
+        let size = bits.count_ones();
+        let mut result: Vec<Square> = Vec::with_capacity(size as uint);
+
+        for i in range(0, size) {
+            let least_sig_bit = bits.trailing_zeros();
+            result.push(Square(least_sig_bit as u8));
+            bits &= bits - 1; //least significant bit
+        }
+        result
     }
 
     #[inline]

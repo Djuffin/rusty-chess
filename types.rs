@@ -47,7 +47,7 @@ impl fmt::Show for Piece {
 
 
 #[deriving(PartialEq, Clone)]
-pub struct Square (u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
+pub struct Square (pub u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
 
 impl Square {
 
@@ -188,25 +188,21 @@ impl Board {
 
     //returns a list of squares containing pieces of given kind and color
     pub fn get_pieces(&self, kind: Kind, color: Color) -> Vec<Square> {
-        let pieces_bitset = self.get_piece_bitset(kind);
-        let color_bitset = match color {
-            White => self.whites,
-            Black => self.blacks
-        };
-        let mut result_bitmask = (pieces_bitset & color_bitset).bits;
-        let size = result_bitmask.count_ones();
-        let mut result: Vec<Square> = Vec::with_capacity(size as uint);
+        let pieces_bitset = *self.get_piece_bitset(kind);
+        let color_bitset = *self.get_color_bitset(color);
+        (pieces_bitset & color_bitset).get_active_squares()
+    }
 
-        for i in range(0, size) {
-            let least_sig_bit = result_bitmask.trailing_zeros();
-            result.push(Square(least_sig_bit as u8));
-            result_bitmask &= result_bitmask - 1; //least significant bit
+    #[inline] 
+    pub fn get_color_bitset<'a> (&'a self, color:Color) -> &'a BitSet {
+        match color {
+            White => &self.whites,
+            Black => &self.blacks
         }
-        result
     }
 
     #[inline]
-    fn get_piece_bitset<'a>(&'a self, kind:Kind) -> &'a BitSet {
+    pub fn get_piece_bitset<'a>(&'a self, kind:Kind) -> &'a BitSet {
         match kind {
             Pawn   => &self.pawns,
             Bishop => &self.bishops,
