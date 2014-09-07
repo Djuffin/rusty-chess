@@ -44,7 +44,7 @@ impl BitSet {
 
     #[inline]
     pub fn get_file(self, file:u8) -> u8 {
-        (::utils::transpose(self.bits) >> (file * 8u8) as uint) as u8
+        (self.transpose().bits >> (file * 8u8) as uint) as u8
     }
 
     #[inline]

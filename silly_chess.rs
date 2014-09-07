@@ -8,12 +8,14 @@ pub mod bitset;
 pub mod fen;
 pub mod move_gen;
 pub mod utils;
+pub mod tables;
 
 pub fn main() {
+    tables::init_square_data();
     let initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    let sq = Square::new(3,0);
     let p = fen::parse_fen(initial_fen).unwrap();
-    let moves = move_gen::gen_rook_moves(p.board, Square::new(3, 0), White);
+    let moves = move_gen::gen_queen_moves(p.board, sq, White);
     println!("{}", moves);
-
-
+ 
 }
