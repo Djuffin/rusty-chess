@@ -101,6 +101,18 @@ impl Not<BitSet> for BitSet {
     }
 }
 
+impl Shl<uint, BitSet> for BitSet {
+    fn shl(&self, rhs: &uint) -> BitSet {
+        BitSet { bits: self.bits << *rhs }
+    }
+}
+
+
+impl Shr<uint, BitSet> for BitSet {
+    fn shr(&self, rhs: &uint) -> BitSet {
+        BitSet { bits: self.bits >> *rhs }
+    }
+}
 
 impl fmt::Show for BitSet {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {

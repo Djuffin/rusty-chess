@@ -46,6 +46,19 @@ pub fn gen_queen_moves(board: Board, sq: Square, color: Color) -> BitSet {
         & !friendly_color_set
 }
 
+pub fn gen_king_moves(board: Board, sq: Square, color: Color) -> BitSet {
+    use tables::get_king_moves_mask;
+    let friendly_color_set = *board.get_color_bitset(color);
+    let raw_moves = get_king_moves_mask(sq);
+    raw_moves & !friendly_color_set
+}
+
+pub fn gen_knight_moves(board: Board, sq: Square, color: Color) -> BitSet {
+    use tables::get_knight_moves_mask;
+    let friendly_color_set = *board.get_color_bitset(color);
+    let raw_moves = get_knight_moves_mask(sq);
+    raw_moves & !friendly_color_set
+}
 
 #[inline]
 fn gen_rank_sliding_moves(occupied_set: BitSet, sq:Square) -> BitSet {
@@ -84,7 +97,7 @@ fn gen_diagonal_sliding_moves(occupied_set: BitSet, sq:Square) -> BitSet {
 }
 
 #[inline]
-pub fn gen_antidiagonal_sliding_moves(occupied_set: BitSet, sq:Square) -> BitSet {
+fn gen_antidiagonal_sliding_moves(occupied_set: BitSet, sq:Square) -> BitSet {
     use tables::get_antidiagonal_mask;
     let occupied_set = occupied_set.bits;
     let antidiag_mask = get_antidiagonal_mask(sq).bits;
