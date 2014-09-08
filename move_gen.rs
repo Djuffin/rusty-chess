@@ -7,107 +7,157 @@ use bitset::BitSet;
 //https://chessprogramming.wikispaces.com/Hyperbola+Quintessence
 
 
-pub fn gen_moves(pos:Position) -> Vec<Move> {
-    let board = &pos.board;
-    let color = pos.next_to_move;
-    let occupied_set = board.whites | board.blacks;
-    let friendly_set = board.get_color_bitset(color);
-    let mut result:Vec<Move> = Vec::with_capacity(40);
+pub struct MovesIterator {
+    position: Position,
+    moves_cache: Vec<Move>,
+    next_kind: Kind,
+    occupied_set: BitSet,
+    friendly_set: BitSet,
+    can_gen_more: bool
+}
 
-    //queen
-    for from_sq in board.get_pieces(Queen, color) {
-        let moves_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
-        for to_sq in moves_set.iter() {
-            result.push(squares_to_move(Queen, color, from_sq, to_sq));
+impl Iterator<Move> for MovesIterator {
+    fn next(&mut self) -> Option<Move> {
+        while self.moves_cache.len() == 0 {
+            if !self.can_gen_more {
+                return None
+            }
+            self.can_gen_more = self.gen_more_moves();
+        } 
+        Some(self.moves_cache.pop().unwrap())
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (uint, Option<uint>) {
+        (self.moves_cache.len(), None)    
+    }  
+}
+
+impl MovesIterator {
+    pub fn new(pos:Position) -> MovesIterator {
+        MovesIterator {
+            position : pos,
+            moves_cache : Vec::with_capacity(32),
+            next_kind : Queen,
+            occupied_set : pos.board.whites | pos.board.blacks,
+            friendly_set : pos.board.get_color_bitset(pos.next_to_move),
+            can_gen_more : true
         }
     }
 
-    //rook
-    for from_sq in board.get_pieces(Rook, color) {
-        let moves_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
-        for to_sq in moves_set.iter() {
-            result.push(squares_to_move(Rook, color, from_sq, to_sq));
-        }
-    }    
+    fn gen_more_moves(&mut self) -> bool {
+        let result = &mut self.moves_cache;
+        let occupied_set = self.occupied_set;
+        let friendly_set = self.friendly_set;
+        let pos = &self.position;
+        let board = &pos.board;
+        let color = pos.next_to_move;
+        match self.next_kind {
+           Queen => {
+                for from_sq in board.get_pieces(Queen, color) {
+                    let moves_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
+                    for to_sq in moves_set.iter() {
+                        result.push(squares_to_move(Queen, color, from_sq, to_sq));
+                    }
+                } 
+                self.next_kind = Rook;
+                true           
+           } 
+           Rook => {
+                for from_sq in board.get_pieces(Rook, color) {
+                    let moves_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
+                    for to_sq in moves_set.iter() {
+                        result.push(squares_to_move(Rook, color, from_sq, to_sq));
+                    }
+                }
+                self.next_kind = Bishop;
+                true
+           }
+           Bishop => {
+                for from_sq in board.get_pieces(Bishop, color) {
+                    let moves_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
+                    for to_sq in moves_set.iter() {
+                        result.push(squares_to_move(Bishop, color, from_sq, to_sq));
+                    }
+                }            
+                self.next_kind = Knight;
+                true
+           }
+           Knight => {
+                for from_sq in board.get_pieces(Knight, color) {
+                    let moves_set = gen_knight_moves(friendly_set, from_sq);
+                    for to_sq in moves_set.iter() {
+                        result.push(squares_to_move(Knight, color, from_sq, to_sq));
+                    }
+                }
+                self.next_kind = Pawn;
+                true
+           }
+           Pawn => {
+                let en_passant_set = match pos.en_passant {
+                                        Some(s) => BitSet::from_one_square(s),
+                                        None => BitSet::empty()
+                                     };
+                 
+                if color == White {
+                    //free_set is a set of squares a pawn can go to.
+                    //We copy all occupied squares on 3rd rank to 4th rank in order 
+                    //to account for the fact that if pawn can't step one square 
+                    //it also can't step two squares at a time. 
+                    let free_set = !(occupied_set | BitSet::new(occupied_set.get_rank(2) as u64) << 8 * 3);
+                    let pawn_enemy_set = board.get_color_bitset(Black) | en_passant_set;        
+                    for from_sq in board.get_pieces(Pawn, color) {
+                        let moves_set = gen_white_pawn_moves(free_set, pawn_enemy_set, from_sq);
+                        add_pawn_moves(result, color, from_sq, moves_set);
+                    }
+                } else {
+                    //see comment for whites
+                    let free_set = !(occupied_set | BitSet::new(occupied_set.get_rank(5) as u64) << 8 * 4);        
+                    let pawn_enemy_set = board.get_color_bitset(White) | en_passant_set;
+                    for from_sq in board.get_pieces(Pawn, color) {
+                        let moves_set = gen_black_pawn_moves(free_set, pawn_enemy_set, from_sq);
+                        add_pawn_moves(result, color, from_sq, moves_set);
+                    }
+                }            
+                self.next_kind = King;
+                true
+           },
+           King => {
+                for from_sq in board.get_pieces(King, color) {
+                    let moves_set = gen_king_moves(friendly_set, from_sq);
+                    for to_sq in moves_set.iter() {
+                        result.push(squares_to_move(King, color, from_sq, to_sq));
+                    }
+                }
 
-    //bishops
-    for from_sq in board.get_pieces(Bishop, color) {
-        let moves_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
-        for to_sq in moves_set.iter() {
-            result.push(squares_to_move(Bishop, color, from_sq, to_sq));
+                //castling
+                let (castle_rank, queen_castle_allowed, king_castle_allowed) = 
+                    match (color, pos.white_castling, pos.black_castling) {
+                    (White, QueenCastling, _) => (0, true,  false), 
+                    (White, KingCastling, _)  => (0, false, true),
+                    (White, BothCastling, _)  => (0, true,  true),
+                    (Black, _, QueenCastling) => (7, true,  false),   
+                    (Black, _, KingCastling)  => (7, false, true),  
+                    (Black, _, BothCastling)  => (7, true,  true),
+                    (White, NoCastling, _)| (Black, _, NoCastling)  => (3, false, false)
+                };
+
+                //here we assume that if castling right is specified king and rook
+                //are on the castling ready position
+                if king_castle_allowed {
+                    if occupied_set.get_rank(castle_rank) & 0b01100000u8 == 0 {
+                        result.push(CastleKingSide);
+                    }
+                }
+                if queen_castle_allowed {
+                    if occupied_set.get_rank(castle_rank) & 0b00001110u8 == 0 {
+                        result.push(CastleQueenSide);
+                    }
+                }
+                false
+           }
         }
     }
-
-    //knight
-    for from_sq in board.get_pieces(Knight, color) {
-        let moves_set = gen_knight_moves(friendly_set, from_sq);
-        for to_sq in moves_set.iter() {
-            result.push(squares_to_move(Knight, color, from_sq, to_sq));
-        }
-    }
-
-    //pawns
-    let en_passant_set = match pos.en_passant {
-                            Some(s) => BitSet::from_one_square(s),
-                            None => BitSet::empty()
-                         };
-     
-    if color == White {
-        //free_set is a set of squares a pawn can go to.
-        //We copy all occupied squares on 3rd rank to 4th rank in order 
-        //to account for the fact that if pawn can't step one square 
-        //it also can't step two squares at a time. 
-        let free_set = !(occupied_set | BitSet::new(occupied_set.get_rank(2) as u64) << 8 * 3);
-        let pawn_enemy_set = board.get_color_bitset(Black) | en_passant_set;        
-        for from_sq in board.get_pieces(Pawn, color) {
-            let moves_set = gen_white_pawn_moves(free_set, pawn_enemy_set, from_sq);
-            add_pawn_moves(&mut result, color, from_sq, moves_set);
-        }
-    } else {
-        //see comment for whites
-        let free_set = !(occupied_set | BitSet::new(occupied_set.get_rank(5) as u64) << 8 * 4);        
-        let pawn_enemy_set = board.get_color_bitset(White) | en_passant_set;
-        for from_sq in board.get_pieces(Pawn, color) {
-            let moves_set = gen_black_pawn_moves(free_set, pawn_enemy_set, from_sq);
-            add_pawn_moves(&mut result, color, from_sq, moves_set);
-        }
-    }
-
-
-    //king
-    for from_sq in board.get_pieces(King, color) {
-        let moves_set = gen_king_moves(friendly_set, from_sq);
-        for to_sq in moves_set.iter() {
-            result.push(squares_to_move(King, color, from_sq, to_sq));
-        }
-    }
-
-    //castling
-    let (castle_rank, queen_castle_allowed, king_castle_allowed) = 
-        match (color, pos.white_castling, pos.black_castling) {
-        (White, QueenCastling, _) => (0, true,  false), 
-        (White, KingCastling, _)  => (0, false, true),
-        (White, BothCastling, _)  => (0, true,  true),
-        (Black, _, QueenCastling) => (7, true,  false),   
-        (Black, _, KingCastling)  => (7, false, true),  
-        (Black, _, BothCastling)  => (7, true,  true),
-        (White, NoCastling, _)| (Black, _, NoCastling)  => (3, false, false)
-    };
-
-    //here we assume that if castling right is specified king and rook
-    //are on the castling ready position
-    if king_castle_allowed {
-        if occupied_set.get_rank(castle_rank) & 0b01100000u8 == 0 {
-            result.push(CastleKingSide);
-        }
-    }
-    if queen_castle_allowed {
-        if occupied_set.get_rank(castle_rank) & 0b00001110u8 == 0 {
-            result.push(CastleQueenSide);
-        }
-    }
-
-    result
 }
 
 
