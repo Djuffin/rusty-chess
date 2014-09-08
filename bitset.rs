@@ -2,9 +2,13 @@ use std::fmt;
 use std::iter::range_step;
 use types::Square;
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub struct BitSet {
     pub bits:u64
+}
+
+pub struct SquareIter {
+    bits:u64
 }
 
 impl BitSet {
@@ -53,17 +57,8 @@ impl BitSet {
     }
 
     #[inline]
-    pub fn get_active_squares(self) -> Vec<Square> {
-        let mut bits = self.bits;
-        let size = bits.count_ones();
-        let mut result: Vec<Square> = Vec::with_capacity(size as uint);
-
-        for i in range(0, size) {
-            let least_sig_bit = bits.trailing_zeros();
-            result.push(Square(least_sig_bit as u8));
-            bits &= bits - 1; //least significant bit
-        }
-        result
+    pub fn iter(self) -> SquareIter {
+        SquareIter::new(self.bits)
     }
 
     #[inline]
@@ -71,6 +66,33 @@ impl BitSet {
         self.bits == 0
     }
 
+}
+
+impl Iterator<Square> for SquareIter {
+    #[inline]
+    fn next(&mut self) -> Option<Square> {
+        if self.bits == 0 {
+            None
+        } else {
+            let least_sig_bit = self.bits.trailing_zeros();
+            self.bits &= self.bits - 1;
+            Some (Square(least_sig_bit as u8))
+        }
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (uint, Option<uint>) {
+        let count = self.bits.count_ones() as uint; 
+        (count, Some(count))    
+    }  
+}
+
+impl SquareIter {
+    #[inline]
+    fn new(bits: u64) -> SquareIter {
+        SquareIter { bits:bits }
+    }
+  
 }
 
 impl BitAnd<BitSet, BitSet> for BitSet {
@@ -102,6 +124,7 @@ impl Not<BitSet> for BitSet {
 }
 
 impl Shl<uint, BitSet> for BitSet {
+    #[inline]
     fn shl(&self, rhs: &uint) -> BitSet {
         BitSet { bits: self.bits << *rhs }
     }
@@ -109,6 +132,7 @@ impl Shl<uint, BitSet> for BitSet {
 
 
 impl Shr<uint, BitSet> for BitSet {
+    #[inline]
     fn shr(&self, rhs: &uint) -> BitSet {
         BitSet { bits: self.bits >> *rhs }
     }
@@ -125,5 +149,12 @@ impl fmt::Show for BitSet {
             try!(write!(f, "{0}", "\n"));
         }
         Ok (())
+     }
+}
+
+impl fmt::Show for SquareIter {
+     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
+        let list:Vec<Square> = FromIterator::from_iter(*self);
+        write!(f, "{0}", list)
      }
 }

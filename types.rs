@@ -1,14 +1,14 @@
 use std::fmt;
 use std::iter::range_step;
-use bitset::BitSet;
+use bitset::{BitSet, SquareIter};
 
 
-#[deriving(PartialEq, Clone, Show)]
+#[deriving(PartialEq, Show)]
 pub enum Kind {
     Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
 }
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub enum Color {
     White = 0, Black = 1
 }
@@ -22,7 +22,7 @@ impl fmt::Show for Color {
      }
 }
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub struct Piece (pub Kind, pub Color);
 
 impl fmt::Show for Piece {
@@ -46,7 +46,7 @@ impl fmt::Show for Piece {
 }
 
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub struct Square (pub u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
 
 impl Square {
@@ -86,12 +86,12 @@ impl fmt::Show for Square {
 }
 
 
-#[deriving(PartialEq, Clone, Show)]
+#[deriving(PartialEq, Show)]
 pub enum CastlingRight {
     NoCastling, QueenCastling, KingCastling, BothCastling
 }
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub struct OrdinalMoveInfo {
     pub from: Square,
     pub to : Square,
@@ -99,7 +99,7 @@ pub struct OrdinalMoveInfo {
     pub promotion : Option<Kind>
 }
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub enum Move {
     OrdinalMove (OrdinalMoveInfo),
     CastleKingSide,
@@ -119,7 +119,7 @@ impl fmt::Show for Move {
 
 
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub struct Board {
     pub whites:  BitSet,
     pub blacks:  BitSet,
@@ -187,10 +187,10 @@ impl Board {
     }
 
     //returns a list of squares containing pieces of given kind and color
-    pub fn get_pieces(&self, kind: Kind, color: Color) -> Vec<Square> {
+    pub fn get_pieces(&self, kind: Kind, color: Color) -> SquareIter {
         let pieces_bitset = *self.get_piece_bitset(kind);
         let color_bitset = *self.get_color_bitset(color);
-        (pieces_bitset & color_bitset).get_active_squares()
+        (pieces_bitset & color_bitset).iter()
     }
 
     #[inline] 
@@ -233,7 +233,7 @@ impl fmt::Show for Board {
 }
 
 
-#[deriving(PartialEq, Clone)]
+#[deriving(PartialEq)]
 pub struct Position {
     pub board : Board,
     pub en_passant : Option<Square>,
@@ -265,23 +265,21 @@ fn get_pieces_test() {
     for &color in [White, Black].iter() {
         for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
             let board = initial_position.board;
-            let squares = board.get_pieces(kind, color);
-            for &sq in squares.iter() {
+            let mut squares = board.get_pieces(kind, color);
+            for sq in squares {
                 assert_eq!(board.get_piece(sq), Some(Piece(kind, color)));
             }
         }
     }
 
-    let mut empty_fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
-    let mut empty_position = parse_fen(empty_fen).unwrap();
+    let empty_fen = "8/8/8/8/8/8/8/8 w KQkq - 0 1";
+    let empty_position = parse_fen(empty_fen).unwrap();
     for &color in [White, Black].iter() {
         for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
-            let empty_list = empty_position.board.get_pieces(kind, color);
-            assert_eq!(empty_list.len(), 0);
+            let mut empty_iter = empty_position.board.get_pieces(kind, color);
+            assert_eq!(empty_iter.next(), None);
         }
     }
-
-
 } 
 
 }
