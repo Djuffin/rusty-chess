@@ -13,6 +13,16 @@ pub enum Color {
     White = 0, Black = 1
 }
 
+impl Color {
+    #[inline]
+    pub fn inverse(self) -> Color {
+        match self {
+            White => Black,
+            Black => White
+        }
+    }
+}
+
 impl fmt::Show for Color {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -188,28 +198,28 @@ impl Board {
 
     //returns a list of squares containing pieces of given kind and color
     pub fn get_pieces(&self, kind: Kind, color: Color) -> SquareIter {
-        let pieces_bitset = *self.get_piece_bitset(kind);
-        let color_bitset = *self.get_color_bitset(color);
+        let pieces_bitset = self.get_piece_bitset(kind);
+        let color_bitset = self.get_color_bitset(color);
         (pieces_bitset & color_bitset).iter()
     }
 
     #[inline] 
-    pub fn get_color_bitset<'a> (&'a self, color:Color) -> &'a BitSet {
+    pub fn get_color_bitset(self, color:Color) -> BitSet {
         match color {
-            White => &self.whites,
-            Black => &self.blacks
+            White => self.whites,
+            Black => self.blacks
         }
     }
 
     #[inline]
-    pub fn get_piece_bitset<'a>(&'a self, kind:Kind) -> &'a BitSet {
+    pub fn get_piece_bitset(self, kind:Kind) -> BitSet {
         match kind {
-            Pawn   => &self.pawns,
-            Bishop => &self.bishops,
-            Knight => &self.knights,
-            Rook   => &self.rooks,
-            Queen  => &self.queens,
-            King   => &self.kings,
+            Pawn   => self.pawns,
+            Bishop => self.bishops,
+            Knight => self.knights,
+            Rook   => self.rooks,
+            Queen  => self.queens,
+            King   => self.kings,
         }
     }
 

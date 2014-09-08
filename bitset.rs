@@ -21,10 +21,16 @@ impl BitSet {
         BitSet { bits: bits }
     }
 
+    //#[inline]
+    //pub fn transpose(self) -> BitSet {
+    //    BitSet { bits: ::utils::transpose(self.bits) }
+    //}
+
     #[inline]
-    pub fn transpose(self) -> BitSet {
-        BitSet { bits: ::utils::transpose(self.bits) }
+    pub fn swap(self) -> BitSet {
+        BitSet { bits: self.bits.swap_bytes() }
     }
+
 
     #[inline]
     pub fn from_one_square(sq: Square) -> BitSet {
@@ -46,10 +52,10 @@ impl BitSet {
         }
     }
 
-    #[inline]
-    pub fn get_file(self, file:u8) -> u8 {
-        (self.transpose().bits >> (file * 8u8) as uint) as u8
-    }
+    //#[inline]
+    //pub fn get_file(self, file:u8) -> u8 {
+    //    (self.transpose().bits >> (file * 8u8) as uint) as u8
+    //}
 
     #[inline]
     pub fn get_rank(self, rank:u8) -> u8 {
@@ -99,6 +105,20 @@ impl BitAnd<BitSet, BitSet> for BitSet {
     #[inline]
     fn bitand(&self, rhs: &BitSet) -> BitSet {
         BitSet { bits : self.bits & rhs.bits }
+    }
+}
+
+impl Add<BitSet, BitSet> for BitSet {
+    #[inline]
+    fn add(&self, rhs: &BitSet) -> BitSet {
+        BitSet { bits : self.bits + rhs.bits }
+    }
+}
+
+impl Sub<BitSet, BitSet> for BitSet {
+    #[inline]
+    fn sub(&self, rhs: &BitSet) -> BitSet {
+        BitSet { bits : self.bits - rhs.bits }
     }
 }
 

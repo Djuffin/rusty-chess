@@ -1,5 +1,5 @@
 use bitset::BitSet;
-use types::{Square};
+use types::{Square, Color, White, Black};
 
 
 struct SquareData {
@@ -21,7 +21,17 @@ struct SquareData {
     knight_moves_mask : BitSet,
 
     //This mask contains active bits in locations where a king can jump from this square.
-    king_moves_mask : BitSet    
+    king_moves_mask : BitSet,
+
+    //This mask contains active bits in locations where a white pawn 
+    //can move (without taking) from this square.
+    white_pawn_moves_mask : BitSet,
+    black_pawn_moves_mask : BitSet,
+
+    //This mask contains active bits in locations where a white pawn 
+    //can take from this square.
+    white_pawn_attacks_mask : BitSet,
+    black_pawn_attacks_mask : BitSet    
 }
 
 static EMPTY_SQ_DATA  : SquareData = SquareData { 
@@ -29,7 +39,11 @@ static EMPTY_SQ_DATA  : SquareData = SquareData {
     diagonal_mask: BitSet { bits:0 },
     antidiagonal_mask: BitSet { bits:0 }, 
     knight_moves_mask: BitSet { bits:0 }, 
-    king_moves_mask: BitSet { bits:0 } 
+    king_moves_mask: BitSet { bits:0 },
+    white_pawn_attacks_mask: BitSet { bits:0 },
+    white_pawn_moves_mask: BitSet { bits:0 },
+    black_pawn_attacks_mask: BitSet { bits:0 },
+    black_pawn_moves_mask: BitSet { bits:0 }
 };
 static mut SQ_DATA:[SquareData, ..64] = [ EMPTY_SQ_DATA, ..64];
 
@@ -68,6 +82,34 @@ pub fn get_king_moves_mask(sq:Square) -> BitSet {
     }
 }
 
+#[inline]
+pub fn get_white_pawn_moves_mask(sq:Square) -> BitSet {
+    unsafe {
+        SQ_DATA[sq.file_and_rank() as uint].white_pawn_moves_mask
+    }
+}
+
+#[inline]
+pub fn get_white_pawn_attacks_mask(sq:Square) -> BitSet {
+    unsafe {
+        SQ_DATA[sq.file_and_rank() as uint].white_pawn_attacks_mask
+    }
+}
+
+#[inline]
+pub fn get_black_pawn_moves_mask(sq:Square) -> BitSet {
+    unsafe {
+        SQ_DATA[sq.file_and_rank() as uint].black_pawn_moves_mask
+    }
+}
+
+#[inline]
+pub fn get_black_pawn_attacks_mask(sq:Square) -> BitSet {
+    unsafe {
+        SQ_DATA[sq.file_and_rank() as uint].black_pawn_attacks_mask
+    }
+}
+
 
 pub fn init_square_data() {
     let mut file_mask = 0x0101010101010101u64; //all active bits on a file where sq belongs
@@ -100,7 +142,11 @@ pub fn init_square_data() {
                     diagonal_mask: BitSet::new(diagonal_mask) & (!sq_set),
                     antidiagonal_mask: BitSet::new(antidiagonal_mask) & (!sq_set),
                     king_moves_mask: gen_king_moves(sq),
-                    knight_moves_mask: gen_knight_moves(sq)
+                    knight_moves_mask: gen_knight_moves(sq),
+                    white_pawn_moves_mask: gen_pawn_moves(sq, White),
+                    white_pawn_attacks_mask: gen_pawn_attacks(sq, White),
+                    black_pawn_moves_mask: gen_pawn_moves(sq, Black),
+                    black_pawn_attacks_mask: gen_pawn_attacks(sq, Black),
                 };
             }
 
@@ -109,41 +155,67 @@ pub fn init_square_data() {
     }
 } 
 
-#[inline]
+fn gen_pawn_moves(sq:Square, color:Color) -> BitSet {
+    let sq_set = BitSet::from_one_square(sq);
+    if color == White {
+        if sq.rank() == 1 {
+            sq_set << 8 | sq_set << 16
+        } else {
+            sq_set << 8
+        }
+    } else {
+        if sq.rank() == 6 {
+            sq_set >> 8 | sq_set >> 16
+        } else {
+            sq_set >> 8
+        }        
+    }
+}
+
+fn gen_pawn_attacks(sq:Square, color:Color) -> BitSet {
+    let sq_set = BitSet::from_one_square(sq);
+    if color == White {
+        clear_files(FILE_A, sq_set << 8 << 1) | 
+        clear_files(FILE_H, sq_set << 8 >> 1)
+    } else {
+        clear_files(FILE_A, sq_set >> 8 << 1) | 
+        clear_files(FILE_H, sq_set >> 8 >> 1)
+    }
+}
+
+
 fn gen_knight_moves(sq:Square) -> BitSet {
     let sq_set  = BitSet::from_one_square(sq);
-    let file_a  = 0b00000001;
-    let file_h  = 0b10000000;
-    let file_ab = 0b00000011;
-    let file_gh = 0b11000000;
-    let result = clear_files (file_a,  sq_set << 8 << 8 << 1) //north-north-east
-               | clear_files (file_ab, sq_set << 8 << 1 << 1) //east-north-east
-               | clear_files (file_ab, sq_set >> 8 << 1 << 1) //east-south-east
-               | clear_files (file_a,  sq_set >> 8 >> 8 << 1) //south-south-east
-               | clear_files (file_h,  sq_set << 8 << 8 >> 1) //north-north-west
-               | clear_files (file_gh, sq_set << 8 >> 1 >> 1) //west-north-west
-               | clear_files (file_gh, sq_set >> 8 >> 1 >> 1) //west-south-west
-               | clear_files (file_h,  sq_set >> 8 >> 8 >> 1);//south-south-west
+    let result = clear_files(FILE_A,  sq_set << 8 << 8 << 1) //north-north-east
+               | clear_files(FILE_AB, sq_set << 8 << 1 << 1) //east-north-east
+               | clear_files(FILE_AB, sq_set >> 8 << 1 << 1) //east-south-east
+               | clear_files(FILE_A,  sq_set >> 8 >> 8 << 1) //south-south-east
+               | clear_files(FILE_H,  sq_set << 8 << 8 >> 1) //north-north-west
+               | clear_files(FILE_GH, sq_set << 8 >> 1 >> 1) //west-north-west
+               | clear_files(FILE_GH, sq_set >> 8 >> 1 >> 1) //west-south-west
+               | clear_files(FILE_H,  sq_set >> 8 >> 8 >> 1);//south-south-west
     result
 }
 
-#[inline]
 fn gen_king_moves(sq:Square) -> BitSet {
     let sq_set = BitSet::from_one_square(sq);
-    let file_a  = 0b00000001;
-    let file_h  = 0b10000000;
     let result = (sq_set << 8) //north
                | (sq_set >> 8) //south
-               | clear_files (file_a, sq_set << 1) //east
-               | clear_files (file_h, sq_set >> 1) //west
-               | clear_files (file_a, sq_set << 8 << 1) //north-east
-               | clear_files (file_a, sq_set >> 8 << 1) //south-east
-               | clear_files (file_h, sq_set << 8 >> 1) //north-west
-               | clear_files (file_h, sq_set >> 8 >> 1);//south-west
+               | clear_files(FILE_A, sq_set << 1) //east
+               | clear_files(FILE_H, sq_set >> 1) //west
+               | clear_files(FILE_A, sq_set << 8 << 1) //north-east
+               | clear_files(FILE_A, sq_set >> 8 << 1) //south-east
+               | clear_files(FILE_H, sq_set << 8 >> 1) //north-west
+               | clear_files(FILE_H, sq_set >> 8 >> 1);//south-west
     result
 }
 
-#[inline]
+
+static FILE_A:u64  = 0b00000001;
+static FILE_H:u64  = 0b10000000;
+static FILE_AB:u64 = 0b00000011;
+static FILE_GH:u64 = 0b11000000;
+
 fn clear_files(mask:u64, b:BitSet) -> BitSet {
     let mut mask64 = 0u64;
     for i in range(0i, 8) {
@@ -153,7 +225,6 @@ fn clear_files(mask:u64, b:BitSet) -> BitSet {
     b & BitSet::new(!mask64)
 }
 
-#[inline]
 fn shift(x:u8, base:uint, n:int) -> u64 {
     let byte:u8 = if n >= 0 {
         x << (n as uint)
