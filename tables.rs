@@ -23,12 +23,12 @@ struct SquareData {
     //This mask contains active bits in locations where a king can jump from this square.
     king_moves_mask : BitSet,
 
-    //This mask contains active bits in locations where a white pawn 
+    //This mask contains active bits in locations where a pawn 
     //can move (without taking) from this square.
     white_pawn_moves_mask : BitSet,
     black_pawn_moves_mask : BitSet,
 
-    //This mask contains active bits in locations where a white pawn 
+    //This mask contains active bits in locations where a pawn 
     //can take from this square.
     white_pawn_attacks_mask : BitSet,
     black_pawn_attacks_mask : BitSet    
