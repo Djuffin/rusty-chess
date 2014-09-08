@@ -82,6 +82,31 @@ pub fn gen_moves(pos:Position) -> Vec<Move> {
         }
     }
 
+    //castling
+    let (castle_rank, queen_castle_allowed, king_castle_allowed) = 
+        match (color, pos.white_castling, pos.black_castling) {
+        (White, QueenCastling, _) => (0, true,  false), 
+        (White, KingCastling, _)  => (0, false, true),
+        (White, BothCastling, _)  => (0, true,  true),
+        (Black, _, QueenCastling) => (7, true,  false),   
+        (Black, _, KingCastling)  => (7, false, true),  
+        (Black, _, BothCastling)  => (7, true,  true),
+        (White, NoCastling, _)| (Black, _, NoCastling)  => (3, false, false)
+    };
+
+    //here we assume that if castling right is specified king and rook
+    //are on the castling ready position
+    if king_castle_allowed {
+        if occupied_set.get_rank(castle_rank) & 0b01100000u8 == 0 {
+            result.push(CastleKingSide);
+        }
+    }
+    if queen_castle_allowed {
+        if occupied_set.get_rank(castle_rank) & 0b00001110u8 == 0 {
+            result.push(CastleQueenSide);
+        }
+    }
+
     result
 }
 
