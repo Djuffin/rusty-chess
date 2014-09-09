@@ -57,14 +57,18 @@ pub fn get_diagonal_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_antidiagonal_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].antidiagonal_mask
+        let result = SQ_DATA[sq.file_and_rank() as uint].antidiagonal_mask;
+        debug_assert!(result.bits != 0, "tables are not initialized");
+        result
     }
 }
 
 #[inline]
 pub fn get_file_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].file_mask
+        let result = SQ_DATA[sq.file_and_rank() as uint].file_mask;
+        debug_assert!(result.bits != 0, "tables are not initialized");
+        result
     }
 }
 

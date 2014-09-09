@@ -3,12 +3,12 @@ use std::iter::range_step;
 use bitset::{BitSet, SquareIter};
 
 
-#[deriving(PartialEq, Show)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Show)]
 pub enum Kind {
     Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
 }
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord)]
 pub enum Color {
     White = 0, Black = 1
 }
@@ -32,7 +32,7 @@ impl fmt::Show for Color {
      }
 }
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece (pub Kind, pub Color);
 
 impl fmt::Show for Piece {
@@ -56,7 +56,7 @@ impl fmt::Show for Piece {
 }
 
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Square (pub u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
 
 impl Square {
@@ -79,8 +79,8 @@ impl Square {
 
     #[inline(always)]
     pub fn new(file: u8, rank:u8) -> Square { 
-        assert!(file < 8);
-        assert!(rank < 8);
+        debug_assert!(file < 8);
+        debug_assert!(rank < 8);
         Square ((rank << 3) + file )
     }
 
@@ -101,7 +101,7 @@ pub enum CastlingRight {
     NoCastling, QueenCastling, KingCastling, BothCastling
 }
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord)]
 pub struct OrdinalMoveInfo {
     pub from: Square,
     pub to : Square,
@@ -109,7 +109,7 @@ pub struct OrdinalMoveInfo {
     pub promotion : Option<Kind>
 }
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord)]
 pub enum Move {
     OrdinalMove (OrdinalMoveInfo),
     CastleKingSide,

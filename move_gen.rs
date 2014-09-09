@@ -10,21 +10,21 @@ use bitset::BitSet;
 pub struct MovesIterator {
     position: Position,
     moves_cache: Vec<Move>,
-    next_kind: Kind,
     occupied_set: BitSet,
     friendly_set: BitSet,
+    next_kind: Kind,
     can_gen_more: bool
 }
 
 impl Iterator<Move> for MovesIterator {
     fn next(&mut self) -> Option<Move> {
-        while self.moves_cache.len() == 0 {
+        while self.moves_cache.is_empty() {
             if !self.can_gen_more {
                 return None
             }
             self.can_gen_more = self.gen_more_moves();
         } 
-        Some(self.moves_cache.pop().unwrap())
+        self.moves_cache.pop()
     }
 
     #[inline]
@@ -34,9 +34,9 @@ impl Iterator<Move> for MovesIterator {
 }
 
 impl MovesIterator {
-    pub fn new(pos:Position) -> MovesIterator {
+    pub fn new(pos: &Position) -> MovesIterator {
         MovesIterator {
-            position : pos,
+            position : *pos,
             moves_cache : Vec::with_capacity(32),
             next_kind : Queen,
             occupied_set : pos.board.whites | pos.board.blacks,
@@ -288,3 +288,164 @@ fn gen_antidiagonal_sliding_moves(occupied_set: BitSet, sq:Square) -> BitSet {
     let changes = ray_up ^ ray_down;
     changes & antidiag_mask
 }
+
+#[cfg(test)]
+mod tests {
+use fen::parse_fen;
+use types::*;
+use move_gen::MovesIterator;
+use move_gen::tests::squares::*;
+
+#[allow(dead_code)]
+mod squares {
+    use types::{Square};
+    pub static a1:Square = Square(0 * 8 + 0);
+    pub static a2:Square = Square(1 * 8 + 0);
+    pub static a3:Square = Square(2 * 8 + 0);
+    pub static a4:Square = Square(3 * 8 + 0);
+    pub static a5:Square = Square(4 * 8 + 0);
+    pub static a6:Square = Square(5 * 8 + 0);
+    pub static a7:Square = Square(6 * 8 + 0);
+    pub static a8:Square = Square(7 * 8 + 0);
+
+    pub static b1:Square = Square(0 * 8 + 1);
+    pub static b2:Square = Square(1 * 8 + 1);
+    pub static b3:Square = Square(2 * 8 + 1);
+    pub static b4:Square = Square(3 * 8 + 1);
+    pub static b5:Square = Square(4 * 8 + 1);
+    pub static b6:Square = Square(5 * 8 + 1);
+    pub static b7:Square = Square(6 * 8 + 1);
+    pub static b8:Square = Square(7 * 8 + 1);
+
+    pub static c1:Square = Square(0 * 8 + 2);
+    pub static c2:Square = Square(1 * 8 + 2);
+    pub static c3:Square = Square(2 * 8 + 2);
+    pub static c4:Square = Square(3 * 8 + 2);
+    pub static c5:Square = Square(4 * 8 + 2);
+    pub static c6:Square = Square(5 * 8 + 2);
+    pub static c7:Square = Square(6 * 8 + 2);
+    pub static c8:Square = Square(7 * 8 + 2);
+
+    pub static d1:Square = Square(0 * 8 + 3);
+    pub static d2:Square = Square(1 * 8 + 3);
+    pub static d3:Square = Square(2 * 8 + 3);
+    pub static d4:Square = Square(3 * 8 + 3);
+    pub static d5:Square = Square(4 * 8 + 3);
+    pub static d6:Square = Square(5 * 8 + 3);
+    pub static d7:Square = Square(6 * 8 + 3);
+    pub static d8:Square = Square(7 * 8 + 3);
+
+    pub static e1:Square = Square(0 * 8 + 4);
+    pub static e2:Square = Square(1 * 8 + 4);
+    pub static e3:Square = Square(2 * 8 + 4);
+    pub static e4:Square = Square(3 * 8 + 4);
+    pub static e5:Square = Square(4 * 8 + 4);
+    pub static e6:Square = Square(5 * 8 + 4);
+    pub static e7:Square = Square(6 * 8 + 4);
+    pub static e8:Square = Square(7 * 8 + 4);
+
+    pub static f1:Square = Square(0 * 8 + 5);
+    pub static f2:Square = Square(1 * 8 + 5);
+    pub static f3:Square = Square(2 * 8 + 5);
+    pub static f4:Square = Square(3 * 8 + 5);
+    pub static f5:Square = Square(4 * 8 + 5);
+    pub static f6:Square = Square(5 * 8 + 5);
+    pub static f7:Square = Square(6 * 8 + 5);
+    pub static f8:Square = Square(7 * 8 + 5);
+
+    pub static g1:Square = Square(0 * 8 + 6);
+    pub static g2:Square = Square(1 * 8 + 6);
+    pub static g3:Square = Square(2 * 8 + 6);
+    pub static g4:Square = Square(3 * 8 + 6);
+    pub static g5:Square = Square(4 * 8 + 6);
+    pub static g6:Square = Square(5 * 8 + 6);
+    pub static g7:Square = Square(6 * 8 + 6);
+    pub static g8:Square = Square(7 * 8 + 6);
+
+    pub static h1:Square = Square(0 * 8 + 7);
+    pub static h2:Square = Square(1 * 8 + 7);
+    pub static h3:Square = Square(2 * 8 + 7);
+    pub static h4:Square = Square(3 * 8 + 7);
+    pub static h5:Square = Square(4 * 8 + 7);
+    pub static h6:Square = Square(5 * 8 + 7);
+    pub static h7:Square = Square(6 * 8 + 7);
+    pub static h8:Square = Square(7 * 8 + 7);
+}
+
+fn gen_moves(fen:&str) -> Vec<Move> {
+    let p = parse_fen(fen).unwrap();
+    let it = MovesIterator::new(&p);
+    let mut result:Vec<Move> = FromIterator::from_iter(it);
+    result.sort();
+    result    
+}
+
+fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
+    let filter_it = it.filter_map(|m| {
+        match m {
+            OrdinalMove(mi) if mi.from == sq => Some(m), 
+            _ => None
+        }
+    });
+    let mut result:Vec<Move> = FromIterator::from_iter(filter_it);
+    result.sort();
+    result    
+}
+
+fn prepare_moves(piece: Piece, from:Square, squares:&[Square]) -> Vec<Move> {
+    let it = squares.iter().map(|to_sq| {
+        OrdinalMove(OrdinalMoveInfo{
+            from: from,
+            to : *to_sq,
+            piece : piece,
+            promotion : None            
+        })
+    });
+    let mut result:Vec<Move> = FromIterator::from_iter(it);
+    result.sort();
+    result
+}
+
+fn assert_moves(fen:&str, from:Square, squares:&[Square]) {
+    let pos = parse_fen(fen).unwrap();
+    let it = MovesIterator::new(&pos);
+    let generated_moves = from_square(from, it);
+
+    let piece = pos.board.get_piece(from).unwrap();
+    let expected_moves = prepare_moves(piece, from, squares);
+    assert_eq!(generated_moves, expected_moves);    
+}
+
+#[test]
+fn rook_moves_test() {
+    ::tables::init_square_data();
+    let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1"; 
+    
+    //moves of black rook a1
+    assert_moves(fen, a1, [a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
+
+    //moves of black rook d5
+    assert_moves(fen, d5, [a5, b5, c5, d4, d6, d7, d8]);
+
+    //moves of black rook e5
+    assert_moves(fen, e5, [f5, g5, h5, e6, e7, e8, e4]);
+
+    //moves of black rook h1
+    assert_moves(fen, h1, [b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
+
+    //same but white to move
+    let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r w - - 0 1"; 
+    
+    //moves of black rook a8
+    assert_moves(fen, a8, [a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
+
+    //moves of black rook d4
+    assert_moves(fen, d4, [a4, b4, c4, d5, d3, d2, d1]);
+
+    //moves of black rook e4
+    assert_moves(fen, e4, [f4, g4, h4, e5, e3, e2, e1]);
+
+    //moves of black rook h8
+    assert_moves(fen, h8, [b8, c8, d8, e8, f8, g8, h1, h2, h3, h4, h5, h6, h7]);
+}
+} 
