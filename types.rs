@@ -35,6 +35,21 @@ impl fmt::Show for Color {
 #[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Piece (pub Kind, pub Color);
 
+impl Piece {
+    #[inline]
+    pub fn color(self) -> Color {
+        let Piece(_, color) = self;
+        color
+    }
+
+    #[inline]
+    pub fn kind(self) -> Kind {
+        let Piece(kind, _) = self;
+        kind
+    }
+
+}
+
 impl fmt::Show for Piece {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
@@ -135,11 +150,11 @@ impl fmt::Show for Move {
             CastleQueenSide => write!(f, "O-O-O"),
             OrdinalMove (ref of) => {  
                 match of.promotion {
-                    Some(promo) => {
-                        let Piece(_, color) = of.piece;
-                        write!(f, "{0} {1}-{2}={3}", of.piece, of.from, of.to, Piece(promo, color))
-                    }
-                    None => write!(f, "{0} {1}-{2}", of.piece, of.from, of.to)
+                    Some(promo) => 
+                        write!(f, "{0} {1}-{2}={3}", of.piece, of.from, of.to, 
+                            Piece(promo, of.piece.color())),
+                    None => 
+                        write!(f, "{0} {1}-{2}", of.piece, of.from, of.to)
                 }
             }
                 
@@ -187,6 +202,19 @@ impl Board {
 
         self.whites .set(sq, color == White);
         self.blacks .set(sq, color == Black);
+    }
+
+    pub fn clear_square(&mut self, sq:Square) {
+        let not_sq = !BitSet::from_one_square(sq);
+        self.pawns   = self.pawns   & not_sq;
+        self.bishops = self.bishops & not_sq;
+        self.knights = self.knights & not_sq;
+        self.rooks   = self.rooks   & not_sq;
+        self.queens  = self.queens  & not_sq;
+        self.kings   = self.kings   & not_sq;
+
+        self.whites  = self.whites  & not_sq;
+        self.blacks  = self.blacks  & not_sq; 
     }
 
     //retutns a piece located at a given square (if any)
@@ -274,6 +302,39 @@ pub struct Position {
     pub white_castling : CastlingRight,
     pub black_castling : CastlingRight
 
+}
+
+impl Position {
+    pub fn apply_move(&mut self, move:&Move) -> Option<Piece> {
+        match *move {
+            OrdinalMove (ref mi) => {
+                match mi.piece.kind() {
+                    Queen | Bishop | Knight => {
+                        let old_piece = self.board.get_piece(mi.to);
+                        self.board.set_piece(mi.to, mi.piece);
+                        self.board.clear_square(mi.from);
+                        self.update_stats_after_move(false);
+                        old_piece
+                    },
+                    _ => unimplemented!()
+                }
+            }
+            CastleQueenSide => unimplemented!(),
+            CastleKingSide => unimplemented!(),
+        }
+    } 
+
+    fn update_stats_after_move(&mut self, action:bool) {
+        self.next_to_move = self.next_to_move.inverse();
+        if self.next_to_move == White {
+            self.full_moves += 1;
+        }
+        if action {
+            self.half_moves_since_action = 0;
+        } else {
+            self.half_moves_since_action += 1;
+        }
+    }
 }
 
 

@@ -33,6 +33,60 @@ impl Iterator<Move> for MovesIterator {
     }  
 }
 
+pub fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
+    let occupied_set = pos.board.whites | pos.board.blacks;
+    let friendly_set = BitSet::empty(); //here it doesn't matter who's friend
+    let board = &pos.board;
+    let color = pos.next_to_move;
+
+    for from_sq in board.get_pieces(Queen, color) {
+        let attack_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(Rook, color) {
+        let attack_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(Bishop, color) {
+        let attack_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(Knight, color) {
+        let attack_set = ::tables::get_knight_moves_mask(from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    if color == White {
+        for from_sq in board.get_pieces(Pawn, color) {
+            let attack_set = ::tables::get_white_pawn_attacks_mask(from_sq);
+            if !(attack_set & test_area).is_empty() {
+                return true;
+            }
+        }
+    } else {
+        for from_sq in board.get_pieces(Pawn, color) {
+            let attack_set = ::tables::get_black_pawn_attacks_mask(from_sq);
+            if !(attack_set & test_area).is_empty() {
+                return true;
+            }
+        }
+    }
+    for from_sq in board.get_pieces(King, color) {
+        let attack_set = gen_king_moves(friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    false
+} 
+
 impl MovesIterator {
     pub fn new(pos: &Position) -> MovesIterator {
         MovesIterator {
@@ -142,8 +196,8 @@ impl MovesIterator {
                     (White, NoCastling, _)| (Black, _, NoCastling)  => (3, false, false)
                 };
 
-                //here we assume that if castling right is specified king and rook
-                //are on the castling ready position
+                //here we assume that if castling right is specified then
+                //king and rook are on the castling ready positions
                 if king_castle_allowed {
                     if occupied_set.get_rank(castle_rank) & 0b01100000u8 == 0 {
                         result.push(CastleKingSide);
