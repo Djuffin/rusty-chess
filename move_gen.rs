@@ -314,6 +314,22 @@ fn assert_moves(fen:&str, from:Square, expected_moves:&[Move]) {
     assert_eq!(generated_moves, expected_moves);    
 }
 
+fn assert_castles(fen:&str, expected_moves:&[Move]) {
+    let pos = parse_fen(fen).unwrap();
+    let it = MovesIterator::new(&pos);
+    let filter_it = it.filter_map(|m| {
+        match m {
+            CastleQueenSide | CastleKingSide => Some(m),
+            _ => None
+        }
+    });
+    let mut generated_moves:Vec<Move> = FromIterator::from_iter(filter_it);
+    generated_moves.sort();
+    let mut expected_moves = Vec::from_slice(expected_moves);
+    expected_moves.sort();
+    assert_eq!(generated_moves, expected_moves);    
+}
+
 fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
     let pos = parse_fen(fen).unwrap();
     let it = MovesIterator::new(&pos);
@@ -327,32 +343,16 @@ fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
 fn rook_moves_test() {
     ::tables::init_square_data();
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1"; 
-    
-    //moves of black rook a1
     assert_squares(fen, a1, [a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
-
-    //moves of black rook d5
     assert_squares(fen, d5, [a5, b5, c5, d4, d6, d7, d8]);
-
-    //moves of black rook e5
     assert_squares(fen, e5, [f5, g5, h5, e6, e7, e8, e4]);
-
-    //moves of black rook h1
     assert_squares(fen, h1, [b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
 
     //same but white to move
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r w - - 0 1"; 
-    
-    //moves of white rook a8
     assert_squares(fen, a8, [a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
-
-    //moves of white rook d4
     assert_squares(fen, d4, [a4, b4, c4, d5, d3, d2, d1]);
-
-    //moves of white rook e4
     assert_squares(fen, e4, [f4, g4, h4, e5, e3, e2, e1]);
-
-    //moves of white rook h8
     assert_squares(fen, h8, [b8, c8, d8, e8, f8, g8, h1, h2, h3, h4, h5, h6, h7]);
 }
 
@@ -360,20 +360,37 @@ fn rook_moves_test() {
 fn bishop_moves_test() {
     ::tables::init_square_data();
     let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B w - - 0 1"; 
-
-    //moves of white bishop d4
     assert_squares(fen, d4, [c3, e5, f6, g7, h8, a7, b6, c5, e3, f2]);
-
-    //moves of white bishop h1
     assert_squares(fen, h1, [a8, b7, c6, d5, e4, f3, g2]);
 
     let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B b - - 0 1";
-
-    //moves of black bishop a8
     assert_squares(fen, a8, [b7, c6, d5, e4, f3, g2, h1]);
-
-    //moves of black bishop c4
     assert_squares(fen, c4, [a6, b5, d3, e2, b3, d5, e6, f7, g8]);
+}
+
+#[test]
+fn knight_moves_test() {
+    ::tables::init_square_data();
+    let fen = "N7/8/7p/4n3/6n1/8/5p2/8 w - - 0 1";
+    assert_squares(fen, a8, [b6, c7]);  
+
+    let fen = "N7/8/7p/4n3/6n1/8/5p2/8 b - - 0 1";
+    assert_squares(fen, e5, [c6, d7, c4, d3, f3, f7, g6]);
+    assert_squares(fen, g4, [h2, e3, f6]);
+}
+
+#[test]
+fn king_moves_test() {
+    ::tables::init_square_data();
+    let fen = "rn2k2r/8/8/2K2k2/8/8/8/R3K1NR w KQkq - 0 1";
+    assert_squares(fen, c5, [c4, c6, b5, d5, d4, d6, b4, b6]);
+    assert_squares(fen, e1, [d1, d2, e2, f2, f1]);
+    assert_castles(fen, [CastleQueenSide]);
+
+    let fen = "rn2k2r/8/8/2K2k2/8/8/8/R3K1NR b KQkq - 0 1";
+    assert_squares(fen, f5, [f4, f6, e4, e5, e6, g4, g5, g6]);
+    assert_squares(fen, e8, [d8, d7, e7, f7, f8]);
+    assert_castles(fen, [CastleKingSide]);
 }
 
 #[test]
