@@ -166,27 +166,17 @@ fn add_pawn_moves(list:&mut Vec<Move>, color: Color, from:Square, moves:BitSet) 
     for to in moves.iter() {
         if to.rank() == 7 || to.rank() == 1 {
             for &p in [Queen, Rook, Bishop, Knight].iter() {
-                list.push(OrdinalMove (OrdinalMoveInfo{
-                        from:from, 
-                        to:to, 
-                        piece: Piece(Pawn, color),
-                        promotion: Some(p)  
-                    }))
+                list.push( Move::new(Piece(Pawn, color), from, to, Some(p)) )
             }
         } else {
-            list.push(squares_to_move(Pawn, color, from, to));
+            list.push( Move::new(Piece(Pawn, color), from, to, None) );
         }
     }
 }
 
 #[inline]
 fn squares_to_move(kind:Kind, color: Color, from:Square, to:Square) -> Move {
-    OrdinalMove (OrdinalMoveInfo{
-        from:from, 
-        to:to, 
-        piece: Piece(kind, color),
-        promotion: None  
-    })
+    Move::new(Piece(kind, color), from, to, None)
 }
 
 fn gen_white_pawn_moves(free_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
@@ -372,14 +362,6 @@ mod squares {
     pub static h8:Square = Square(7 * 8 + 7);
 }
 
-fn gen_moves(fen:&str) -> Vec<Move> {
-    let p = parse_fen(fen).unwrap();
-    let it = MovesIterator::new(&p);
-    let mut result:Vec<Move> = FromIterator::from_iter(it);
-    result.sort();
-    result    
-}
-
 fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
     let filter_it = it.filter_map(|m| {
         match m {
@@ -393,24 +375,25 @@ fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
 }
 
 fn prepare_moves(piece: Piece, from:Square, squares:&[Square]) -> Vec<Move> {
-    let it = squares.iter().map(|to_sq| {
-        OrdinalMove(OrdinalMoveInfo{
-            from: from,
-            to : *to_sq,
-            piece : piece,
-            promotion : None            
-        })
-    });
+    let it = squares.iter().map(|to_sq| Move::new(piece, from, *to_sq, None));
     let mut result:Vec<Move> = FromIterator::from_iter(it);
     result.sort();
     result
 }
 
-fn assert_moves(fen:&str, from:Square, squares:&[Square]) {
+fn assert_moves(fen:&str, from:Square, expected_moves:&[Move]) {
     let pos = parse_fen(fen).unwrap();
     let it = MovesIterator::new(&pos);
     let generated_moves = from_square(from, it);
+    let mut expected_moves = Vec::from_slice(expected_moves);
+    expected_moves.sort();
+    assert_eq!(generated_moves, expected_moves);    
+}
 
+fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
+    let pos = parse_fen(fen).unwrap();
+    let it = MovesIterator::new(&pos);
+    let generated_moves = from_square(from, it);
     let piece = pos.board.get_piece(from).unwrap();
     let expected_moves = prepare_moves(piece, from, squares);
     assert_eq!(generated_moves, expected_moves);    
@@ -422,30 +405,78 @@ fn rook_moves_test() {
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1"; 
     
     //moves of black rook a1
-    assert_moves(fen, a1, [a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
+    assert_squares(fen, a1, [a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
 
     //moves of black rook d5
-    assert_moves(fen, d5, [a5, b5, c5, d4, d6, d7, d8]);
+    assert_squares(fen, d5, [a5, b5, c5, d4, d6, d7, d8]);
 
     //moves of black rook e5
-    assert_moves(fen, e5, [f5, g5, h5, e6, e7, e8, e4]);
+    assert_squares(fen, e5, [f5, g5, h5, e6, e7, e8, e4]);
 
     //moves of black rook h1
-    assert_moves(fen, h1, [b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
+    assert_squares(fen, h1, [b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
 
     //same but white to move
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r w - - 0 1"; 
     
-    //moves of black rook a8
-    assert_moves(fen, a8, [a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
+    //moves of white rook a8
+    assert_squares(fen, a8, [a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
 
-    //moves of black rook d4
-    assert_moves(fen, d4, [a4, b4, c4, d5, d3, d2, d1]);
+    //moves of white rook d4
+    assert_squares(fen, d4, [a4, b4, c4, d5, d3, d2, d1]);
 
-    //moves of black rook e4
-    assert_moves(fen, e4, [f4, g4, h4, e5, e3, e2, e1]);
+    //moves of white rook e4
+    assert_squares(fen, e4, [f4, g4, h4, e5, e3, e2, e1]);
 
-    //moves of black rook h8
-    assert_moves(fen, h8, [b8, c8, d8, e8, f8, g8, h1, h2, h3, h4, h5, h6, h7]);
+    //moves of white rook h8
+    assert_squares(fen, h8, [b8, c8, d8, e8, f8, g8, h1, h2, h3, h4, h5, h6, h7]);
 }
+
+#[test]
+fn bishop_moves_test() {
+    ::tables::init_square_data();
+    let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B w - - 0 1"; 
+
+    //moves of white bishop d4
+    assert_squares(fen, d4, [c3, e5, f6, g7, h8, a7, b6, c5, e3, f2]);
+
+    //moves of white bishop h1
+    assert_squares(fen, h1, [a8, b7, c6, d5, e4, f3, g2]);
+
+    let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B b - - 0 1";
+
+    //moves of black bishop a8
+    assert_squares(fen, a8, [b7, c6, d5, e4, f3, g2, h1]);
+
+    //moves of black bishop c4
+    assert_squares(fen, c4, [a6, b5, d3, e2, b3, d5, e6, f7, g8]);
+}
+
+#[test]
+fn pawn_moves_test() {
+    ::tables::init_square_data();
+    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K5/P7/8 w - - 0 1";
+
+    assert_squares(fen, a2, [a3, a4]);    
+    assert_squares(fen, b4, [b5]);
+    assert_moves(fen, d7, [
+        Move::new(Piece(Pawn, White), d7, d8, Some(Queen)),
+        Move::new(Piece(Pawn, White), d7, d8, Some(Rook)),
+        Move::new(Piece(Pawn, White), d7, d8, Some(Bishop)),
+        Move::new(Piece(Pawn, White), d7, d8, Some(Knight)),
+        Move::new(Piece(Pawn, White), d7, e8, Some(Queen)),
+        Move::new(Piece(Pawn, White), d7, e8, Some(Rook)),
+        Move::new(Piece(Pawn, White), d7, e8, Some(Bishop)),
+        Move::new(Piece(Pawn, White), d7, e8, Some(Knight))
+    ]);
+
+    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K5/P7/8 b - b3 0 1";    
+
+    assert_squares(fen, c4, [b3]);
+    assert_squares(fen, e5, []);
+    assert_squares(fen, e4, [e3]);
+    assert_squares(fen, g7, [f6, h6, g6, g5]);
+}
+
+
 } 

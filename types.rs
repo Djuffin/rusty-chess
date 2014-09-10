@@ -3,12 +3,12 @@ use std::iter::range_step;
 use bitset::{BitSet, SquareIter};
 
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Show)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Show, Clone)]
 pub enum Kind {
     Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Color {
     White = 0, Black = 1
 }
@@ -32,7 +32,7 @@ impl fmt::Show for Color {
      }
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Piece (pub Kind, pub Color);
 
 impl fmt::Show for Piece {
@@ -56,7 +56,7 @@ impl fmt::Show for Piece {
 }
 
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Square (pub u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
 
 impl Square {
@@ -101,7 +101,7 @@ pub enum CastlingRight {
     NoCastling, QueenCastling, KingCastling, BothCastling
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct OrdinalMoveInfo {
     pub from: Square,
     pub to : Square,
@@ -109,11 +109,23 @@ pub struct OrdinalMoveInfo {
     pub promotion : Option<Kind>
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Move {
     OrdinalMove (OrdinalMoveInfo),
     CastleKingSide,
     CastleQueenSide
+}
+
+impl Move {
+    #[inline]
+    pub fn new(piece:Piece, from:Square, to:Square, promo: Option<Kind>) -> Move {
+        OrdinalMove(OrdinalMoveInfo{
+            from: from,
+            to: to,
+            piece: piece,
+            promotion: promo
+        })
+    }
 }
 
 impl fmt::Show for Move {
@@ -121,8 +133,17 @@ impl fmt::Show for Move {
         match *self {
             CastleKingSide => write!(f, "O-O"),
             CastleQueenSide => write!(f, "O-O-O"),
-            OrdinalMove (ref of) =>  
-                write!(f, "{0} {1}-{2}", of.piece, of.from, of.to)
+            OrdinalMove (ref of) => {  
+                match of.promotion {
+                    Some(promo) => {
+                        let Piece(_, color) = of.piece;
+                        write!(f, "{0} {1}-{2}={3}", of.piece, of.from, of.to, Piece(promo, color))
+                    }
+                    None => write!(f, "{0} {1}-{2}", of.piece, of.from, of.to)
+                }
+            }
+                
+
         }
      }
 }
