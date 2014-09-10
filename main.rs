@@ -9,6 +9,8 @@ pub mod fen;
 pub mod move_gen;
 pub mod utils;
 pub mod tables;
+#[allow(dead_code)]
+pub mod squares;
 
 pub fn main() {
     tables::init_square_data();
