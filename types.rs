@@ -116,6 +116,25 @@ pub enum CastlingRight {
     NoCastling, QueenCastling, KingCastling, BothCastling
 }
 
+impl CastlingRight {
+    fn remove(self, to_remove:CastlingRight) -> CastlingRight {
+        match to_remove {
+            KingCastling => match self {
+                BothCastling => QueenCastling,
+                KingCastling => NoCastling,
+                _ => self
+            },
+            QueenCastling => match self {
+                BothCastling => KingCastling,
+                QueenCastling => NoCastling,
+                _ => self
+            },
+            BothCastling => NoCastling,
+            NoCastling => self
+        }
+    }
+}
+
 #[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct OrdinalMoveInfo {
     pub from: Square,
@@ -305,23 +324,117 @@ pub struct Position {
 
 impl Position {
     pub fn apply_move(&mut self, move:&Move) -> Option<Piece> {
+        use squares::*;
+        let color = self.next_to_move;
         match *move {
             OrdinalMove (ref mi) => {
+                let mut captured_piece = self.board.get_piece(mi.to);
+                self.board.clear_square(mi.from);
+                debug_assert!(self.board.get_piece(mi.from).unwrap().kind() == mi.kind);
                 match mi.kind {
-                    Queen | Bishop | Knight => {
-                        let old_piece = self.board.get_piece(mi.to);
-                        self.board.set_piece(mi.to, Piece(mi.kind, self.next_to_move));
-                        self.board.clear_square(mi.from);
-                        self.update_stats_after_move(false);
-                        old_piece
+                    Queen | Bishop | Knight | Rook => {
+                        self.board.set_piece(mi.to, Piece(mi.kind, color));
+                        self.update_stats_after_move(captured_piece.is_some());
+                        if mi.kind == Rook { 
+                            self.remove_rook_castling_right(mi.from, color);
+                        }
                     },
-                    _ => unimplemented!()
+                    Pawn => {
+                        let piece_after_move = mi.promotion.unwrap_or(Pawn);
+                        debug_assert!(mi.promotion.is_none() || mi.to.rank() == 7 || mi.to.rank() == 0)
+                        self.board.set_piece(mi.to, Piece(piece_after_move, color));
+                        self.update_stats_after_move(true);
+
+                        //en passant move
+                        if color == White && mi.from.rank() == 6 && mi.to.rank() == 4 {
+                            self.en_passant = Some (Square::new(mi.to.file(), 5));
+                        } 
+                        else if color == Black && mi.from.rank() == 1 && mi.to.rank() == 3 {
+                            self.en_passant = Some (Square::new(mi.to.file(), 2));
+                        }
+
+                        //en passant capture
+                        if Some(mi.to) == self.en_passant {
+                            let jump_rank = match color {
+                                White => 4, //inverse order since we'are capturing
+                                Black => 3
+                            };
+                            let jump_sq = Square::new(mi.to.file(), jump_rank);
+                            captured_piece = self.board.get_piece(jump_sq);
+                            debug_assert!(captured_piece.unwrap().kind() == Pawn);
+                            self.board.clear_square(jump_sq);
+                        } 
+                    }
+                    King => {
+                        self.board.set_piece(mi.to, Piece(mi.kind, color));
+                        self.update_stats_after_move(captured_piece.is_some());
+                        self.remove_king_castling_right(color);
+                    }
                 }
+                debug_assert!(captured_piece.is_none() || captured_piece.unwrap().color() == color.inverse());
+                captured_piece
             }
-            CastleQueenSide => unimplemented!(),
-            CastleKingSide => unimplemented!(),
+            CastleQueenSide => {
+                if color == White {
+                    self.board.clear_square(a1);
+                    self.board.clear_square(e1);
+                    self.board.set_piece(c1, Piece(King, White));
+                    self.board.set_piece(d1, Piece(Rook, White));
+                } else {
+                    self.board.clear_square(a8);
+                    self.board.clear_square(e8);
+                    self.board.set_piece(c8, Piece(King, Black));
+                    self.board.set_piece(d8, Piece(Rook, Black));
+                }
+                self.update_stats_after_move(false);
+                self.remove_king_castling_right(color);
+                None
+            }
+            CastleKingSide =>{
+                if color == White {
+                    self.board.clear_square(h1);
+                    self.board.clear_square(e1);
+                    self.board.set_piece(g1, Piece(King, White));
+                    self.board.set_piece(f1, Piece(Rook, White));
+                } else {
+                    self.board.clear_square(h8);
+                    self.board.clear_square(e8);
+                    self.board.set_piece(g8, Piece(King, Black));
+                    self.board.set_piece(f8, Piece(Rook, Black));
+                }
+                self.update_stats_after_move(false);
+                self.remove_king_castling_right(color);
+                None
+            }
         }
     } 
+
+    #[inline]
+    fn remove_king_castling_right(&mut self, color:Color) {
+        if color == White {
+            self.white_castling = self.white_castling.remove(BothCastling);
+        } else {
+            self.black_castling = self.black_castling.remove(BothCastling);
+        }
+    }
+
+    #[inline]
+    fn remove_rook_castling_right(&mut self, rook_sq:Square, color:Color) {
+        use squares::*;
+        if color == White {
+            if rook_sq == a1 {
+                self.white_castling = self.white_castling.remove(QueenCastling);
+            } else if rook_sq == h1 {
+                self.white_castling = self.white_castling.remove(KingCastling);
+            } 
+        } else {
+            if rook_sq == a8 {
+                self.black_castling = self.black_castling.remove(QueenCastling);
+            } else if rook_sq == h8 {
+                self.black_castling = self.black_castling.remove(KingCastling);
+            }            
+        }
+    }
 
     fn update_stats_after_move(&mut self, action:bool) {
         self.next_to_move = self.next_to_move.inverse();
@@ -333,6 +446,7 @@ impl Position {
         } else {
             self.half_moves_since_action += 1;
         }
+        self.en_passant = None;
     }
 }
 
