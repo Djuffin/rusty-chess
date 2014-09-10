@@ -120,7 +120,7 @@ pub enum CastlingRight {
 pub struct OrdinalMoveInfo {
     pub from: Square,
     pub to : Square,
-    pub piece : Piece,
+    pub kind : Kind,
     pub promotion : Option<Kind>
 }
 
@@ -133,11 +133,11 @@ pub enum Move {
 
 impl Move {
     #[inline]
-    pub fn new(piece:Piece, from:Square, to:Square, promo: Option<Kind>) -> Move {
+    pub fn new(kind:Kind, from:Square, to:Square, promo: Option<Kind>) -> Move {
         OrdinalMove(OrdinalMoveInfo{
             from: from,
             to: to,
-            piece: piece,
+            kind: kind,
             promotion: promo
         })
     }
@@ -151,10 +151,9 @@ impl fmt::Show for Move {
             OrdinalMove (ref of) => {  
                 match of.promotion {
                     Some(promo) => 
-                        write!(f, "{0} {1}-{2}={3}", of.piece, of.from, of.to, 
-                            Piece(promo, of.piece.color())),
+                        write!(f, "{0} {1}-{2}={3}", of.kind, of.from, of.to, promo),
                     None => 
-                        write!(f, "{0} {1}-{2}", of.piece, of.from, of.to)
+                        write!(f, "{0} {1}-{2}", of.kind, of.from, of.to)
                 }
             }
                 
@@ -308,10 +307,10 @@ impl Position {
     pub fn apply_move(&mut self, move:&Move) -> Option<Piece> {
         match *move {
             OrdinalMove (ref mi) => {
-                match mi.piece.kind() {
+                match mi.kind {
                     Queen | Bishop | Knight => {
                         let old_piece = self.board.get_piece(mi.to);
-                        self.board.set_piece(mi.to, mi.piece);
+                        self.board.set_piece(mi.to, Piece(mi.kind, self.next_to_move));
                         self.board.clear_square(mi.from);
                         self.update_stats_after_move(false);
                         old_piece

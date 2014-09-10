@@ -111,7 +111,7 @@ impl MovesIterator {
                 for from_sq in board.get_pieces(Queen, color) {
                     let moves_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
                     for to_sq in moves_set.iter() {
-                        result.push(squares_to_move(Queen, color, from_sq, to_sq));
+                        result.push(squares_to_move(Queen, from_sq, to_sq));
                     }
                 } 
                 self.next_kind = Rook;
@@ -121,7 +121,7 @@ impl MovesIterator {
                 for from_sq in board.get_pieces(Rook, color) {
                     let moves_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
                     for to_sq in moves_set.iter() {
-                        result.push(squares_to_move(Rook, color, from_sq, to_sq));
+                        result.push(squares_to_move(Rook, from_sq, to_sq));
                     }
                 }
                 self.next_kind = Bishop;
@@ -131,7 +131,7 @@ impl MovesIterator {
                 for from_sq in board.get_pieces(Bishop, color) {
                     let moves_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
                     for to_sq in moves_set.iter() {
-                        result.push(squares_to_move(Bishop, color, from_sq, to_sq));
+                        result.push(squares_to_move(Bishop, from_sq, to_sq));
                     }
                 }            
                 self.next_kind = Knight;
@@ -141,7 +141,7 @@ impl MovesIterator {
                 for from_sq in board.get_pieces(Knight, color) {
                     let moves_set = gen_knight_moves(friendly_set, from_sq);
                     for to_sq in moves_set.iter() {
-                        result.push(squares_to_move(Knight, color, from_sq, to_sq));
+                        result.push(squares_to_move(Knight, from_sq, to_sq));
                     }
                 }
                 self.next_kind = Pawn;
@@ -162,7 +162,7 @@ impl MovesIterator {
                     let pawn_enemy_set = board.get_color_bitset(Black) | en_passant_set;        
                     for from_sq in board.get_pieces(Pawn, color) {
                         let moves_set = gen_white_pawn_moves(free_set, pawn_enemy_set, from_sq);
-                        add_pawn_moves(result, color, from_sq, moves_set);
+                        add_pawn_moves(result, from_sq, moves_set);
                     }
                 } else {
                     //see comment for whites
@@ -170,7 +170,7 @@ impl MovesIterator {
                     let pawn_enemy_set = board.get_color_bitset(White) | en_passant_set;
                     for from_sq in board.get_pieces(Pawn, color) {
                         let moves_set = gen_black_pawn_moves(free_set, pawn_enemy_set, from_sq);
-                        add_pawn_moves(result, color, from_sq, moves_set);
+                        add_pawn_moves(result, from_sq, moves_set);
                     }
                 }            
                 self.next_kind = King;
@@ -180,7 +180,7 @@ impl MovesIterator {
                 for from_sq in board.get_pieces(King, color) {
                     let moves_set = gen_king_moves(friendly_set, from_sq);
                     for to_sq in moves_set.iter() {
-                        result.push(squares_to_move(King, color, from_sq, to_sq));
+                        result.push(squares_to_move(King, from_sq, to_sq));
                     }
                 }
 
@@ -216,21 +216,21 @@ impl MovesIterator {
 
 
 #[inline]
-fn add_pawn_moves(list:&mut Vec<Move>, color: Color, from:Square, moves:BitSet) {
+fn add_pawn_moves(list:&mut Vec<Move>, from:Square, moves:BitSet) {
     for to in moves.iter() {
         if to.rank() == 7 || to.rank() == 1 {
             for &p in [Queen, Rook, Bishop, Knight].iter() {
-                list.push( Move::new(Piece(Pawn, color), from, to, Some(p)) )
+                list.push( Move::new(Pawn, from, to, Some(p)) )
             }
         } else {
-            list.push( Move::new(Piece(Pawn, color), from, to, None) );
+            list.push( Move::new(Pawn, from, to, None) );
         }
     }
 }
 
 #[inline]
-fn squares_to_move(kind:Kind, color: Color, from:Square, to:Square) -> Move {
-    Move::new(Piece(kind, color), from, to, None)
+fn squares_to_move(kind:Kind, from:Square, to:Square) -> Move {
+    Move::new(kind, from, to, None)
 }
 
 fn gen_white_pawn_moves(free_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
@@ -352,8 +352,8 @@ fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
     result    
 }
 
-fn prepare_moves(piece: Piece, from:Square, squares:&[Square]) -> Vec<Move> {
-    let it = squares.iter().map(|to_sq| Move::new(piece, from, *to_sq, None));
+fn prepare_moves(kind: Kind, from:Square, squares:&[Square]) -> Vec<Move> {
+    let it = squares.iter().map(|to_sq| Move::new(kind, from, *to_sq, None));
     let mut result:Vec<Move> = FromIterator::from_iter(it);
     result.sort();
     result
@@ -389,7 +389,7 @@ fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
     let it = MovesIterator::new(&pos);
     let generated_moves = from_square(from, it);
     let piece = pos.board.get_piece(from).unwrap();
-    let expected_moves = prepare_moves(piece, from, squares);
+    let expected_moves = prepare_moves(piece.kind(), from, squares);
     assert_eq!(generated_moves, expected_moves);    
 }
 
@@ -455,14 +455,14 @@ fn pawn_moves_test() {
     assert_squares(fen, a2, [a3, a4]);    
     assert_squares(fen, b4, [b5]);
     assert_moves(fen, d7, [
-        Move::new(Piece(Pawn, White), d7, d8, Some(Queen)),
-        Move::new(Piece(Pawn, White), d7, d8, Some(Rook)),
-        Move::new(Piece(Pawn, White), d7, d8, Some(Bishop)),
-        Move::new(Piece(Pawn, White), d7, d8, Some(Knight)),
-        Move::new(Piece(Pawn, White), d7, e8, Some(Queen)),
-        Move::new(Piece(Pawn, White), d7, e8, Some(Rook)),
-        Move::new(Piece(Pawn, White), d7, e8, Some(Bishop)),
-        Move::new(Piece(Pawn, White), d7, e8, Some(Knight))
+        Move::new(Pawn, d7, d8, Some(Queen)),
+        Move::new(Pawn, d7, d8, Some(Rook)),
+        Move::new(Pawn, d7, d8, Some(Bishop)),
+        Move::new(Pawn, d7, d8, Some(Knight)),
+        Move::new(Pawn, d7, e8, Some(Queen)),
+        Move::new(Pawn, d7, e8, Some(Rook)),
+        Move::new(Pawn, d7, e8, Some(Bishop)),
+        Move::new(Pawn, d7, e8, Some(Knight))
     ]);
 
     let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K5/P7/8 b - b3 0 1";    
