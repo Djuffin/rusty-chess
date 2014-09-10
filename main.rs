@@ -1,4 +1,4 @@
-#![crate_name = "silly-chess"]
+#![crate_name = "rchess"]
 #![crate_type = "bin"]
 #![feature(globs)]
 use types::*;
