@@ -14,10 +14,12 @@ pub mod squares;
 
 pub fn main() {
     tables::init_square_data();
-    let initial_fen = "rnbqkbnr/1ppppppp/8/8/8/8/1PPPPPPP/RNBQK2R w KQkq - 0 1";
+    let initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     let p = fen::parse_fen(initial_fen).unwrap();
-    let moves = move_gen::MovesIterator::new(&p);
-    let mut moves_vec:Vec<Move> = FromIterator::from_iter(moves);
-    moves_vec.sort();
-    println!("{}", moves_vec);
+    for move in p.gen_moves() {
+        let mut p1 = p;
+        println!("Applying move: {}\n", move);
+        p1.apply_move(&move);
+        println!("Result:\n{}\n{}", p1.board, fen::render_fen(&p1));
+    }
 }

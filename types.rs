@@ -313,24 +313,28 @@ impl fmt::Show for Board {
 #[deriving(PartialEq)]
 pub struct Position {
     pub board : Board,
-    pub en_passant : Option<Square>,
-    pub half_moves_since_action : u16,
-    pub full_moves : u16 ,
+    pub full_moves : u16,
     pub next_to_move : Color,
     pub white_castling : CastlingRight,
-    pub black_castling : CastlingRight
-
+    pub black_castling : CastlingRight,
+    pub en_passant : Option<Square>,
+    pub half_moves_since_action : u8
 }
 
 impl Position {
+    pub fn gen_moves(&self) -> ::move_gen::LegalMovesIterator {
+        ::move_gen::LegalMovesIterator::new(self)
+    }
+
     pub fn apply_move(&mut self, move:&Move) -> Option<Piece> {
         use squares::*;
         let color = self.next_to_move;
         match *move {
             OrdinalMove (ref mi) => {
                 let mut captured_piece = self.board.get_piece(mi.to);
+                debug_assert!(self.board.get_piece(mi.from).expect("src sq is empty").kind() 
+                    == mi.kind, "move piece is inconsistent with board piece");
                 self.board.clear_square(mi.from);
-                debug_assert!(self.board.get_piece(mi.from).unwrap().kind() == mi.kind);
                 match mi.kind {
                     Queen | Bishop | Knight | Rook => {
                         self.board.set_piece(mi.to, Piece(mi.kind, color));
@@ -354,14 +358,15 @@ impl Position {
                         }
 
                         //en passant capture
-                        if Some(mi.to) == self.en_passant {
+                        else if Some(mi.to) == self.en_passant {
                             let jump_rank = match color {
                                 White => 4, //inverse order since we'are capturing
                                 Black => 3
                             };
                             let jump_sq = Square::new(mi.to.file(), jump_rank);
                             captured_piece = self.board.get_piece(jump_sq);
-                            debug_assert!(captured_piece.unwrap().kind() == Pawn);
+                            debug_assert!(captured_piece.expect("en passant capture of empty sq")
+                                .kind() == Pawn, "en passant capture of not a pawn");
                             self.board.clear_square(jump_sq);
                         } 
                     }
@@ -371,7 +376,8 @@ impl Position {
                         self.remove_king_castling_right(color);
                     }
                 }
-                debug_assert!(captured_piece.is_none() || captured_piece.unwrap().color() == color.inverse());
+                debug_assert!(captured_piece.is_none() || 
+                    captured_piece.unwrap().color() == color.inverse(), "capturing friendly piece");
                 captured_piece
             }
             CastleQueenSide => {
@@ -436,12 +442,12 @@ impl Position {
         }
     }
 
-    fn update_stats_after_move(&mut self, action:bool) {
+    fn update_stats_after_move(&mut self, reset_move_counter:bool) {
         self.next_to_move = self.next_to_move.inverse();
         if self.next_to_move == White {
             self.full_moves += 1;
         }
-        if action {
+        if reset_move_counter {
             self.half_moves_since_action = 0;
         } else {
             self.half_moves_since_action += 1;

@@ -110,7 +110,7 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     Ok (Position {
         board: board,
         en_passant : en_passant,
-        half_moves_since_action : halfmove,
+        half_moves_since_action : halfmove as u8,
         full_moves : full_moves,
         next_to_move : next_to_move,
         white_castling : white_castling,
@@ -267,7 +267,7 @@ fn parse_render_fens() {
         "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2",
         "rn1q1rk1/1p2bppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/R3KB1R w KQ - 3 10",
         "r2q1rk1/1p1nbppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/2KR1B1R w - - 5 11",
-        "8/8/8/8/8/8/8/8 w - - 777 999",
+        "8/8/8/8/8/8/8/8 w - - 200 999",
         "r3k3/8/8/8/8/8/8/4K2R w Kq - 0 1",
         "pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp b Qk a3 23 21"        
     ];   

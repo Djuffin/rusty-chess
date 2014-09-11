@@ -6,6 +6,33 @@ use bitset::BitSet;
 //https://chessprogramming.wikispaces.com/Efficient+Generation+of+Sliding+Piece+Attacks
 //https://chessprogramming.wikispaces.com/Hyperbola+Quintessence
 
+pub struct LegalMovesIterator {
+    moves_iter: MovesIterator
+}
+
+impl Iterator<Move> for LegalMovesIterator {
+    fn next(&mut self) -> Option<Move> {
+        loop {
+            let next_move = self.moves_iter.next();
+            match next_move {
+                Some(m) => {
+                    if is_legal_move(&self.moves_iter.position, &m) {
+                        return next_move;
+                    }
+                }
+                None => { return None; }
+            };
+        }
+    }
+}
+
+impl LegalMovesIterator {
+    pub fn new(pos: &Position) -> LegalMovesIterator {
+        LegalMovesIterator {
+            moves_iter : MovesIterator::new(pos)
+        }
+    }
+}
 
 pub struct MovesIterator {
     position: Position,
@@ -32,61 +59,6 @@ impl Iterator<Move> for MovesIterator {
         (self.moves_cache.len(), None)    
     }  
 }
-
-pub fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
-    let occupied_set = pos.board.whites | pos.board.blacks;
-    let friendly_set = BitSet::empty(); //here it doesn't matter who's friend
-    let board = &pos.board;
-    let color = pos.next_to_move;
-
-    for from_sq in board.get_pieces(Queen, color) {
-        let attack_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
-        if !(attack_set & test_area).is_empty() {
-            return true;
-        }
-    }
-    for from_sq in board.get_pieces(Rook, color) {
-        let attack_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
-        if !(attack_set & test_area).is_empty() {
-            return true;
-        }
-    }
-    for from_sq in board.get_pieces(Bishop, color) {
-        let attack_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
-        if !(attack_set & test_area).is_empty() {
-            return true;
-        }
-    }
-    for from_sq in board.get_pieces(Knight, color) {
-        let attack_set = ::tables::get_knight_moves_mask(from_sq);
-        if !(attack_set & test_area).is_empty() {
-            return true;
-        }
-    }
-    if color == White {
-        for from_sq in board.get_pieces(Pawn, color) {
-            let attack_set = ::tables::get_white_pawn_attacks_mask(from_sq);
-            if !(attack_set & test_area).is_empty() {
-                return true;
-            }
-        }
-    } else {
-        for from_sq in board.get_pieces(Pawn, color) {
-            let attack_set = ::tables::get_black_pawn_attacks_mask(from_sq);
-            if !(attack_set & test_area).is_empty() {
-                return true;
-            }
-        }
-    }
-    for from_sq in board.get_pieces(King, color) {
-        let attack_set = gen_king_moves(friendly_set, from_sq);
-        if !(attack_set & test_area).is_empty() {
-            return true;
-        }
-    }
-    false
-} 
-
 impl MovesIterator {
     pub fn new(pos: &Position) -> MovesIterator {
         MovesIterator {
@@ -214,6 +186,77 @@ impl MovesIterator {
     }
 }
 
+
+#[inline]
+pub fn is_legal_move(pos: &Position, move: &Move) -> bool {
+    let mut new_pos = *pos;
+    new_pos.apply_move(move);
+    let test_area = match (*move, pos.next_to_move) {
+        (CastleQueenSide, White) => BitSet::new(0b00011100u64),
+        (CastleKingSide,  White) => BitSet::new(0b01110000u64),
+        (CastleQueenSide, Black) => BitSet::new(0b00011100u64) << 7,
+        (CastleKingSide,  Black) => BitSet::new(0b01110000u64) << 7,
+        (_, White)               => new_pos.board.kings & new_pos.board.whites,
+        (_, Black)               => new_pos.board.kings & new_pos.board.blacks,
+    };
+    !is_under_attack(&new_pos, test_area)
+} 
+
+pub fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
+    let occupied_set = pos.board.whites | pos.board.blacks;
+    let friendly_set = BitSet::empty(); //here it doesn't matter who's friend
+    let board = &pos.board;
+    let color = pos.next_to_move;
+
+    for from_sq in board.get_pieces(Queen, color) {
+        let attack_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(Rook, color) {
+        let attack_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(Bishop, color) {
+        let attack_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(Knight, color) {
+        let attack_set = ::tables::get_knight_moves_mask(from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    if color == White {
+        let mut attack_set = BitSet::empty();
+        for from_sq in board.get_pieces(Pawn, color) {
+            attack_set = attack_set | ::tables::get_white_pawn_attacks_mask(from_sq);
+        }
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    } else {
+        let mut attack_set = BitSet::empty();
+        for from_sq in board.get_pieces(Pawn, color) {
+            attack_set = attack_set | ::tables::get_black_pawn_attacks_mask(from_sq);
+        }
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    for from_sq in board.get_pieces(King, color) {
+        let attack_set = gen_king_moves(friendly_set, from_sq);
+        if !(attack_set & test_area).is_empty() {
+            return true;
+        }
+    }
+    false
+} 
 
 #[inline]
 fn add_pawn_moves(list:&mut Vec<Move>, from:Square, moves:BitSet) {
