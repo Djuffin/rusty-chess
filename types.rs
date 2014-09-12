@@ -362,18 +362,9 @@ impl Position {
                         debug_assert!(mi.promotion.is_none() || mi.to.rank() == 7 || mi.to.rank() == 0,
                             "promotion before final rank");
                         self.board.set_piece(mi.to, Piece(piece_after_move, color));
-                        self.update_stats_after_move(true);
-
-                        //en passant move
-                        if color == White && mi.from.rank() == 6 && mi.to.rank() == 4 {
-                            self.en_passant = Some (Square::new(mi.to.file(), 5));
-                        } 
-                        else if color == Black && mi.from.rank() == 1 && mi.to.rank() == 3 {
-                            self.en_passant = Some (Square::new(mi.to.file(), 2));
-                        }
-
+                        
                         //en passant capture
-                        else if Some(mi.to) == self.en_passant {
+                        if Some(mi.to) == self.en_passant {
                             let jump_rank = match color {
                                 White => 4, //inverse order since we'are capturing
                                 Black => 3
@@ -384,6 +375,15 @@ impl Position {
                                 .kind() == Pawn, "en passant capture of not a pawn");
                             self.board.clear_square(jump_sq);
                         } 
+
+                        self.update_stats_after_move(true);
+                        //en passant move
+                        if color == Black && mi.from.rank() == 6 && mi.to.rank() == 4 {
+                            self.en_passant = Some (Square::new(mi.to.file(), 5));
+                        } 
+                        else if color == White && mi.from.rank() == 1 && mi.to.rank() == 3 {
+                            self.en_passant = Some (Square::new(mi.to.file(), 2));
+                        }
                     }
                     King => {
                         self.board.set_piece(mi.to, Piece(mi.kind, color));
