@@ -126,22 +126,15 @@ impl MovesIterator {
                                      };
                  
                 if color == White {
-                    //free_set is a set of squares a pawn can go to.
-                    //We copy all occupied squares on 3rd rank to 4th rank in order 
-                    //to account for the fact that if pawn can't step one square 
-                    //it also can't step two squares at a time. 
-                    let free_set = !(occupied_set | BitSet::new(occupied_set.get_rank(2) as u64) << 8 * 3);
                     let pawn_enemy_set = board.get_color_bitset(Black) | en_passant_set;        
                     for from_sq in board.get_pieces(Pawn, color) {
-                        let moves_set = gen_white_pawn_moves(free_set, pawn_enemy_set, from_sq);
+                        let moves_set = gen_white_pawn_moves(occupied_set, pawn_enemy_set, from_sq);
                         add_pawn_moves(result, from_sq, moves_set);
                     }
                 } else {
-                    //see comment for whites
-                    let free_set = !(occupied_set | BitSet::new(occupied_set.get_rank(5) as u64) << 8 * 4);        
                     let pawn_enemy_set = board.get_color_bitset(White) | en_passant_set;
                     for from_sq in board.get_pieces(Pawn, color) {
-                        let moves_set = gen_black_pawn_moves(free_set, pawn_enemy_set, from_sq);
+                        let moves_set = gen_black_pawn_moves(occupied_set, pawn_enemy_set, from_sq);
                         add_pawn_moves(result, from_sq, moves_set);
                     }
                 }            
@@ -188,7 +181,7 @@ impl MovesIterator {
 
 
 #[inline]
-pub fn is_legal_move(pos: &Position, move: &Move) -> bool {
+fn is_legal_move(pos: &Position, move: &Move) -> bool {
     let mut new_pos = *pos;
     new_pos.apply_move(move);
     let test_area = match (*move, pos.next_to_move) {
@@ -202,7 +195,7 @@ pub fn is_legal_move(pos: &Position, move: &Move) -> bool {
     !is_under_attack(&new_pos, test_area)
 } 
 
-pub fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
+fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
     let occupied_set = pos.board.whites | pos.board.blacks;
     let friendly_set = BitSet::empty(); //here it doesn't matter who's friend
     let board = &pos.board;
@@ -261,7 +254,7 @@ pub fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
 #[inline]
 fn add_pawn_moves(list:&mut Vec<Move>, from:Square, moves:BitSet) {
     for to in moves.iter() {
-        if to.rank() == 7 || to.rank() == 1 {
+        if to.rank() == 7 || to.rank() == 0 {
             for &p in [Queen, Rook, Bishop, Knight].iter() {
                 list.push( Move::new(Pawn, from, to, Some(p)) )
             }
@@ -276,14 +269,29 @@ fn squares_to_move(kind:Kind, from:Square, to:Square) -> Move {
     Move::new(kind, from, to, None)
 }
 
-fn gen_white_pawn_moves(free_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
+fn gen_white_pawn_moves(occupied_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
     use tables::{get_white_pawn_moves_mask, get_white_pawn_attacks_mask};
+    let free_set = if sq.rank() == 1 {
+        //free_set is a set of squares a pawn can go to.
+        //We copy all occupied squares on 3rd rank to 4th rank in order 
+        //to account for the fact that if pawn can't step one square 
+        //it also can't step two squares at a time. 
+        !(occupied_set | BitSet::new(occupied_set.get_rank(2) as u64) << 8 * 3)
+    } else {
+        !occupied_set
+    };
     (get_white_pawn_moves_mask(sq) & free_set) 
         | (get_white_pawn_attacks_mask(sq) & enemy_set) 
 }
 
-fn gen_black_pawn_moves(free_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
+pub fn gen_black_pawn_moves(occupied_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
     use tables::{get_black_pawn_moves_mask, get_black_pawn_attacks_mask};
+    let free_set = if sq.rank() == 6 {
+        //see comment for whites
+        !(occupied_set | BitSet::new(occupied_set.get_rank(5) as u64) << 8 * 4)
+    } else {
+        !occupied_set
+    };
     (get_black_pawn_moves_mask(sq) & free_set) 
         | (get_black_pawn_attacks_mask(sq) & enemy_set) 
 }
@@ -466,6 +474,25 @@ fn bishop_moves_test() {
 }
 
 #[test]
+fn queen_moves_test() {
+    ::tables::init_square_data();
+    let fen = "Q7/8/5q2/8/8/2Q5/8/8 w - - 0 1"; 
+    assert_squares(fen, a8, [a1, a2, a3, a4, a5, a6, a7, 
+                             b8, c8, d8, e8, f8, g8, h8,
+                             b7, c6, d5, e4, f3, g2, h1]);
+    assert_squares(fen, c3, [a3, b3, d3, e3, f3, g3, h3,
+                             c1, c2, c4, c5, c6, c7, c8,
+                             a1, b2, d4, e5, f6,
+                             a5, b4, d2, e1]);
+
+    let fen = "Q7/8/5q2/8/8/2Q5/8/8 b - - 0 1";
+    assert_squares(fen, f6, [a6, b6, c6, d6, e6, g6, h6,
+                             f1, f2, f3, f4, f5, f7, f8,
+                             c3, d4, e5, g7, h8,
+                             d8, e7, g5, h4]);
+}
+
+#[test]
 fn knight_moves_test() {
     ::tables::init_square_data();
     let fen = "N7/8/7p/4n3/6n1/8/5p2/8 w - - 0 1";
@@ -493,10 +520,11 @@ fn king_moves_test() {
 #[test]
 fn pawn_moves_test() {
     ::tables::init_square_data();
-    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K5/P7/8 w - - 0 1";
+    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 w - - 0 1";
 
     assert_squares(fen, a2, [a3, a4]);    
     assert_squares(fen, b4, [b5]);
+    assert_squares(fen, g3, [g4]);
     assert_moves(fen, d7, [
         Move::new(Pawn, d7, d8, Some(Queen)),
         Move::new(Pawn, d7, d8, Some(Rook)),
@@ -508,13 +536,14 @@ fn pawn_moves_test() {
         Move::new(Pawn, d7, e8, Some(Knight))
     ]);
 
-    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K5/P7/8 b - b3 0 1";    
+    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 b - b3 0 1";    
 
     assert_squares(fen, c4, [b3]);
     assert_squares(fen, e5, []);
     assert_squares(fen, e4, [e3]);
     assert_squares(fen, g7, [f6, h6, g6, g5]);
 }
+
 
 
 } 

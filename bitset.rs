@@ -21,11 +21,6 @@ impl BitSet {
         BitSet { bits: bits }
     }
 
-    //#[inline]
-    //pub fn transpose(self) -> BitSet {
-    //    BitSet { bits: ::utils::transpose(self.bits) }
-    //}
-
     #[inline]
     pub fn swap(self) -> BitSet {
         BitSet { bits: self.bits.swap_bytes() }
@@ -51,11 +46,6 @@ impl BitSet {
             self.bits &= !s.bits 
         }
     }
-
-    //#[inline]
-    //pub fn get_file(self, file:u8) -> u8 {
-    //    (self.transpose().bits >> (file * 8u8) as uint) as u8
-    //}
 
     #[inline]
     pub fn get_rank(self, rank:u8) -> u8 {

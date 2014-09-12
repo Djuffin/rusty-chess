@@ -3,7 +3,7 @@ use std::iter::range_step;
 use bitset::{BitSet, SquareIter};
 
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Show, Clone)]
+#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub enum Kind {
     Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
 }
@@ -21,6 +21,20 @@ impl Color {
             Black => White
         }
     }
+}
+
+impl fmt::Show for Kind {
+     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
+        let c = match *self {
+            Pawn   => "P",
+            Knight => "N",
+            Bishop => "B",
+            Rook   => "R",
+            King   => "K",
+            Queen  => "Q"
+        };
+        write!(f, "{}", c)
+     }
 }
 
 impl fmt::Show for Color {
@@ -345,7 +359,8 @@ impl Position {
                     },
                     Pawn => {
                         let piece_after_move = mi.promotion.unwrap_or(Pawn);
-                        debug_assert!(mi.promotion.is_none() || mi.to.rank() == 7 || mi.to.rank() == 0)
+                        debug_assert!(mi.promotion.is_none() || mi.to.rank() == 7 || mi.to.rank() == 0,
+                            "promotion before final rank");
                         self.board.set_piece(mi.to, Piece(piece_after_move, color));
                         self.update_stats_after_move(true);
 

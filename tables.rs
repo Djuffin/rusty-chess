@@ -57,9 +57,7 @@ pub fn get_diagonal_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_antidiagonal_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_DATA[sq.file_and_rank() as uint].antidiagonal_mask;
-        debug_assert!(result.bits != 0, "tables are not initialized");
-        result
+        SQ_DATA[sq.file_and_rank() as uint].antidiagonal_mask
     }
 }
 
@@ -67,7 +65,7 @@ pub fn get_antidiagonal_mask(sq:Square) -> BitSet {
 pub fn get_file_mask(sq:Square) -> BitSet {
     unsafe {
         let result = SQ_DATA[sq.file_and_rank() as uint].file_mask;
-        debug_assert!(result.bits != 0, "tables are not initialized");
+        debug_assert!(!result.is_empty(), "file tables are not initialized");
         result
     }
 }
@@ -75,14 +73,19 @@ pub fn get_file_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_knight_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].knight_moves_mask
+        let result = SQ_DATA[sq.file_and_rank() as uint].knight_moves_mask;
+        debug_assert!(!result.is_empty(), "knight tables are not initialized");
+        result
+
     }
 }
 
 #[inline]
 pub fn get_king_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].king_moves_mask
+        let result = SQ_DATA[sq.file_and_rank() as uint].king_moves_mask;
+        debug_assert!(!result.is_empty(), "king tables are not initialized");
+        result
     }
 }
 
@@ -118,7 +121,7 @@ pub fn get_black_pawn_attacks_mask(sq:Square) -> BitSet {
 pub fn init_square_data() {
     let mut file_mask = 0x0101010101010101u64; //all active bits on a file where sq belongs
     for file in range(0i, 8) {
-        let file_byte = file_mask as u8; //byte with one active bit number file
+        let file_byte = 1u8 << file as uint; //byte with one active bit number file
         for rank in range(0i, 8) {
             let sq = Square::new(file as u8, rank as u8);
             let sq_set = BitSet::from_one_square(sq);
@@ -230,7 +233,7 @@ fn clear_files(mask:u64, b:BitSet) -> BitSet {
 }
 
 fn shift(x:u8, base:uint, n:int) -> u64 {
-    let byte:u8 = if n >= 0 {
+    let byte = if n >= 0 {
         x << (n as uint)
     } else {
         x >> ((-n) as uint)
