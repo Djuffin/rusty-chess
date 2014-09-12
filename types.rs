@@ -393,6 +393,12 @@ impl Position {
                 }
                 debug_assert!(captured_piece.is_none() || 
                     captured_piece.unwrap().color() == color.inverse(), "capturing friendly piece");
+                match captured_piece {
+                    Some(Piece(Rook, _)) =>
+                        //rook is taken remove castling right for this rook
+                        self.remove_rook_castling_right(mi.to, color.inverse()),
+                    _ => {}
+                }
                 captured_piece
             }
             CastleQueenSide => {

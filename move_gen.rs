@@ -187,8 +187,8 @@ fn is_legal_move(pos: &Position, move: &Move) -> bool {
     let test_area = match (*move, pos.next_to_move) {
         (CastleQueenSide, White) => BitSet::new(0b00011100u64),
         (CastleKingSide,  White) => BitSet::new(0b01110000u64),
-        (CastleQueenSide, Black) => BitSet::new(0b00011100u64) << 7,
-        (CastleKingSide,  Black) => BitSet::new(0b01110000u64) << 7,
+        (CastleQueenSide, Black) => BitSet::new(0b00011100u64) << 7 * 8,
+        (CastleKingSide,  Black) => BitSet::new(0b01110000u64) << 7 * 8,
         (_, White)               => new_pos.board.kings & new_pos.board.whites,
         (_, Black)               => new_pos.board.kings & new_pos.board.blacks,
     };
