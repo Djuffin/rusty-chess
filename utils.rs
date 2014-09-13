@@ -13,9 +13,9 @@ pub fn transpose(x: u64) -> u64 {
 }
 
 //Magical way to reverse bits in one byte
+//SLOW. use tables version instead
 #[inline]
 pub fn reverse(x:u8) -> u8 {
-    //TODO: we should compare perf with table lookup
     let r = ((x as u64) * 0x0202020202u64 & 0x010884422010u64) % 1023;
     r as u8
 }

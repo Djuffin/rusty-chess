@@ -340,7 +340,7 @@ fn gen_knight_moves(friendly_set:BitSet, sq:Square) -> BitSet {
 
 #[inline]
 fn gen_rank_sliding_moves(occupied_set:BitSet, sq:Square) -> BitSet {
-    use utils::reverse;
+    use tables::reverse;
     let rank_blockers_mask:u8 = occupied_set.get_rank(sq.rank());
     let piece_mask:u8 = 1u8 << sq.file() as uint;
     let rank_attack = (rank_blockers_mask - (piece_mask << 1)) ^ 
