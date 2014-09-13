@@ -11,22 +11,24 @@ pub mod utils;
 pub mod tables;
 #[allow(dead_code)]
 pub mod squares;
+#[cfg(test)]
+mod perft_tests;
 
 
 fn perft(p: &Position, depth:uint) -> u64 {
     if depth == 0 { return 1; }
-
-    let mut result = 0;
-    for move in p.gen_moves() {
-        let mut p1 = *p;
-        // if depth == 1 {
-        //     println! ("{}", move);
-        // }
-        p1.apply_move(&move);
-        let sub_result = perft(&p1, depth - 1);
-        result += sub_result;
+    let mut iter = p.gen_moves();
+    if depth == 1 {
+        iter.count() as u64
+    } else {
+        let mut result = 0;
+        for move in iter {
+            let mut p1 = *p;
+            p1.apply_move(&move);
+            result += perft(&p1, depth - 1);
+        }
+        result
     }
-    result
 }
 
 pub fn main() {

@@ -544,6 +544,4 @@ fn pawn_moves_test() {
     assert_squares(fen, g7, [f6, h6, g6, g5]);
 }
 
-
-
 } 
