@@ -161,7 +161,8 @@ pub struct OrdinalMoveInfo {
 pub enum Move {
     OrdinalMove (OrdinalMoveInfo),
     CastleKingSide,
-    CastleQueenSide
+    CastleQueenSide,
+    NullMove
 }
 
 impl Move {
@@ -181,6 +182,7 @@ impl fmt::Show for Move {
         match *self {
             CastleKingSide => write!(f, "O-O"),
             CastleQueenSide => write!(f, "O-O-O"),
+            NullMove => write!(f, "null-move"),
             OrdinalMove (ref of) => {  
                 match of.promotion {
                     Some(promo) => 
@@ -417,7 +419,7 @@ impl Position {
                 self.remove_king_castling_right(color);
                 None
             }
-            CastleKingSide =>{
+            CastleKingSide => {
                 if color == White {
                     self.board.clear_square(h1);
                     self.board.clear_square(e1);
@@ -431,6 +433,10 @@ impl Position {
                 }
                 self.update_stats_after_move(false);
                 self.remove_king_castling_right(color);
+                None
+            },
+            NullMove => {
+                self.update_stats_after_move(false);
                 None
             }
         }
