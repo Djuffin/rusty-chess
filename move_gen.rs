@@ -179,7 +179,6 @@ impl MovesIterator {
     }
 }
 
-
 #[inline]
 fn is_legal_move(pos: &Position, move: &Move) -> bool {
     let mut new_pos = *pos;
@@ -192,42 +191,40 @@ fn is_legal_move(pos: &Position, move: &Move) -> bool {
         (_, White)               => new_pos.board.kings & new_pos.board.whites,
         (_, Black)               => new_pos.board.kings & new_pos.board.blacks,
     };
-    !is_under_attack(&new_pos, test_area)
+    !is_under_attack(&new_pos.board, new_pos.next_to_move, test_area)
 } 
 
-fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
-    let occupied_set = pos.board.whites | pos.board.blacks;
+pub fn is_under_attack(board: &Board, attacking_color: Color, test_area:BitSet) -> bool {
+    let occupied_set = board.whites | board.blacks;
     let friendly_set = BitSet::empty(); //here it doesn't matter who's friend
-    let board = &pos.board;
-    let color = pos.next_to_move;
 
-    for from_sq in board.get_pieces(Queen, color) {
+    for from_sq in board.get_pieces(Queen, attacking_color) {
         let attack_set = gen_queen_moves(occupied_set, friendly_set, from_sq);
         if !(attack_set & test_area).is_empty() {
             return true;
         }
     }
-    for from_sq in board.get_pieces(Rook, color) {
+    for from_sq in board.get_pieces(Rook, attacking_color) {
         let attack_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
         if !(attack_set & test_area).is_empty() {
             return true;
         }
     }
-    for from_sq in board.get_pieces(Bishop, color) {
+    for from_sq in board.get_pieces(Bishop, attacking_color) {
         let attack_set = gen_bishop_moves(occupied_set, friendly_set, from_sq);
         if !(attack_set & test_area).is_empty() {
             return true;
         }
     }
-    for from_sq in board.get_pieces(Knight, color) {
+    for from_sq in board.get_pieces(Knight, attacking_color) {
         let attack_set = ::tables::get_knight_moves_mask(from_sq);
         if !(attack_set & test_area).is_empty() {
             return true;
         }
     }
-    if color == White {
+    if attacking_color == White {
         let mut attack_set = BitSet::empty();
-        for from_sq in board.get_pieces(Pawn, color) {
+        for from_sq in board.get_pieces(Pawn, attacking_color) {
             attack_set = attack_set | ::tables::get_white_pawn_attacks_mask(from_sq);
         }
         if !(attack_set & test_area).is_empty() {
@@ -235,14 +232,14 @@ fn is_under_attack(pos: &Position, test_area:BitSet) -> bool {
         }
     } else {
         let mut attack_set = BitSet::empty();
-        for from_sq in board.get_pieces(Pawn, color) {
+        for from_sq in board.get_pieces(Pawn, attacking_color) {
             attack_set = attack_set | ::tables::get_black_pawn_attacks_mask(from_sq);
         }
         if !(attack_set & test_area).is_empty() {
             return true;
         }
     }
-    for from_sq in board.get_pieces(King, color) {
+    for from_sq in board.get_pieces(King, attacking_color) {
         let attack_set = gen_king_moves(friendly_set, from_sq);
         if !(attack_set & test_area).is_empty() {
             return true;

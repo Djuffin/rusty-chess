@@ -342,6 +342,15 @@ impl Position {
         ::move_gen::LegalMovesIterator::new(self)
     }
 
+    pub fn is_checkmate(&self) -> bool {
+        self.is_check() && self.gen_moves().count() == 0
+    }
+
+    pub fn is_check(&self) -> bool {
+        let test_area = self.board.get_color_bitset(self.next_to_move) & self.board.kings;
+        ::move_gen::is_under_attack(&self.board, self.next_to_move.inverse(), test_area)
+    }
+
     pub fn apply_move(&mut self, move:&Move) -> Option<Piece> {
         use squares::*;
         let color = self.next_to_move;
