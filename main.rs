@@ -9,6 +9,7 @@ pub mod fen;
 pub mod move_gen;
 pub mod utils;
 pub mod tables;
+pub mod uci;
 #[allow(dead_code)]
 pub mod squares;
 #[cfg(test)]

@@ -389,20 +389,19 @@ use move_gen::MovesIterator;
 use squares::*;
 
 fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
-    let filter_it = it.filter_map(|m| {
+    let mut result:Vec<Move> = it.filter_map(|m| {
         match m {
             OrdinalMove(mi) if mi.from == sq => Some(m), 
             _ => None
         }
-    });
-    let mut result:Vec<Move> = FromIterator::from_iter(filter_it);
+    }).collect();
     result.sort();
     result    
 }
 
 fn prepare_moves(kind: Kind, from:Square, squares:&[Square]) -> Vec<Move> {
-    let it = squares.iter().map(|to_sq| Move::new(kind, from, *to_sq, None));
-    let mut result:Vec<Move> = FromIterator::from_iter(it);
+    let mut it = squares.iter().map(|to_sq| Move::new(kind, from, *to_sq, None));
+    let mut result:Vec<Move> = it.collect();
     result.sort();
     result
 }
@@ -419,13 +418,12 @@ fn assert_moves(fen:&str, from:Square, expected_moves:&[Move]) {
 fn assert_castles(fen:&str, expected_moves:&[Move]) {
     let pos = parse_fen(fen).unwrap();
     let it = MovesIterator::new(&pos);
-    let filter_it = it.filter_map(|m| {
+    let mut generated_moves:Vec<Move> = it.filter_map(|m| {
         match m {
             CastleQueenSide | CastleKingSide => Some(m),
             _ => None
         }
-    });
-    let mut generated_moves:Vec<Move> = FromIterator::from_iter(filter_it);
+    }).collect();
     generated_moves.sort();
     let mut expected_moves = Vec::from_slice(expected_moves);
     expected_moves.sort();
