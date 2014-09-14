@@ -326,7 +326,7 @@ impl fmt::Show for Board {
 }
 
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Show)]
 pub struct Position {
     pub board : Board,
     pub full_moves : u16,
