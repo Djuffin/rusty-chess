@@ -26,12 +26,12 @@ impl Color {
 impl fmt::Show for Kind {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
-            Pawn   => "P",
-            Knight => "N",
-            Bishop => "B",
-            Rook   => "R",
-            King   => "K",
-            Queen  => "Q"
+            Pawn   => "p",
+            Knight => "n",
+            Bishop => "b",
+            Rook   => "r",
+            King   => "k",
+            Queen  => "q"
         };
         write!(f, "{}", c)
      }

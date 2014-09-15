@@ -1,11 +1,12 @@
 //Implementation of Universal Chess Interface (UCI)
 //http://wbec-ridderkerk.nl/html/UCIProtocol.html
-use types::{Kind, Move, Position, Square, Rook, Bishop, Knight, Queen};
+use types::*;
 use fen::parse_fen;
 use std::str::{Chars, StrSlice};
+use std::fmt;
 
 
-#[deriving(PartialEq, Show)]
+#[deriving(PartialEq)]
 pub struct UciMove {
     from:Square,
     to:Square,
@@ -34,9 +35,113 @@ pub enum Response {
     RspId (String, String),
     RspUciOk,
     RspReadyOk,
-    RspBestMove (Move),
+    RspBestMove (UciMove),
     RspInfo (String),
-    RspOption (String) 
+}
+
+impl fmt::Show for UciMove {
+    fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
+        match self.promotion {
+            Some(promo) => 
+                write!(f, "{}{}{}", self.from, self.to, promo),
+            None => 
+                write!(f, "{}{}", self.from, self.to)
+        }        
+    }
+}
+
+impl fmt::Show for Response {
+    fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            RspId(ref name, ref value) => write!(f, "id {} {}", name, value),
+            RspUciOk => write!(f, "uciok"),
+            RspReadyOk => write!(f, "readyok"),
+            RspInfo(ref info) => write!(f, "info {}", info),
+            RspBestMove(ref move) => write!(f, "bestmove {}", move),
+        }
+    }
+}
+
+fn move_to_uci(move: &Move, color: Color) -> UciMove {
+    use squares::*;
+    match *move {
+        OrdinalMove(ref mi) => UciMove {
+            from: mi.from,
+            to: mi.to,
+            promotion: mi.promotion
+        },
+        CastleKingSide => { 
+            if color == White  { 
+                UciMove {
+                    from: e1,
+                    to: g1,
+                    promotion: None
+                }
+            } else {
+                UciMove {
+                    from: e8,
+                    to: g8,
+                    promotion: None
+                }
+            }
+        }
+        CastleQueenSide => {
+            if color == White {
+                UciMove {
+                    from: e1,
+                    to: c1,
+                    promotion: None
+                }
+            } else {
+                UciMove {
+                    from: e8,
+                    to: c8,
+                    promotion: None
+                }
+            }
+        }
+        NUllMove => fail!("null move is not supposed to get out to uci")
+    }
+}
+
+fn uci_to_move(board: &Board, move: &UciMove) -> Move {
+    use squares::*;
+    let piece = board.get_piece(move.from);
+    let piece = match piece {
+        Some(p) => p,
+        None => {
+            //TODO: report error
+            fail!("Uci move from an empty square");
+        }
+    };
+
+    if piece == Piece(King, White) {
+        if move.from == e1 {
+            if move.to == g1 {
+                return CastleKingSide;
+            } 
+            if move.to == c1 {
+                return CastleQueenSide;
+            } 
+        }
+    } 
+    else if piece == Piece(King, Black) {
+        if move.from == e8 {
+            if move.to == g8 {
+                return CastleKingSide;
+            } 
+            if move.to == c8 {
+                return CastleQueenSide;
+            } 
+        }
+    }
+
+    OrdinalMove (OrdinalMoveInfo {
+        from: move.from,
+        to: move.to,
+        kind: piece.kind(),
+        promotion: move.promotion
+    })
 }
 
 pub fn parse_command(line: &str) -> Result<Command, String> {
