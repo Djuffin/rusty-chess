@@ -18,5 +18,5 @@ mod perft_tests;
 
 pub fn main() {
     tables::init_square_data();
-
+    uci::UciEngine::new().main_loop();
 }

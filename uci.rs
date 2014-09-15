@@ -27,7 +27,8 @@ pub enum Command {
     CmdPosition (Position, Vec<UciMove>),
     CmdGo (SearchOption),
     CmdStop,
-    CmdQuit
+    CmdQuit,
+    CmdUnknown
 }
 
 #[deriving(PartialEq)]
@@ -37,6 +38,10 @@ pub enum Response {
     RspReadyOk,
     RspBestMove (UciMove),
     RspInfo (String),
+}
+
+pub struct UciEngine {
+    position: Position
 }
 
 impl fmt::Show for UciMove {
@@ -58,6 +63,77 @@ impl fmt::Show for Response {
             RspReadyOk => write!(f, "readyok"),
             RspInfo(ref info) => write!(f, "info {}", info),
             RspBestMove(ref move) => write!(f, "bestmove {}", move),
+        }
+    }
+}
+
+impl UciEngine {
+
+    pub fn new() -> UciEngine {
+        UciEngine {
+            position: parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
+        }
+    }
+
+    pub fn main_loop(&mut self) {
+        use std::io;
+        for line in io::stdin().lines() {
+            let line = line.unwrap();
+            let cmd = match parse_command(line.as_slice()) {
+                Ok(cmd) => cmd,
+                Err(err) => CmdUnknown 
+            };
+
+            let responses  = match cmd {
+                CmdUci => vec![RspId("name".to_string(), "rchess".to_string()), 
+                           RspId("author".to_string(), "EZ".to_string()), RspUciOk],
+                CmdIsReady => vec![RspReadyOk],
+                CmdUciNewGame => vec![],
+                CmdPosition (ref pos, ref moves) => {
+                    self.set_position(pos, moves);
+                    vec![]
+                }
+                CmdGo (_) => {
+                    let move = self.think();
+                    let uci_move = move_to_uci(&move, self.position.next_to_move);
+                    vec![RspInfo(format!("currmove {}", uci_move)), RspBestMove(uci_move)]
+                },
+                CmdStop => vec![],
+                CmdQuit => { break },
+                CmdUnknown => vec![]
+            };
+
+            for r in responses.iter() {
+                println!("{}", r);
+            }
+            {
+                use std::io::{File, Append, ReadWrite};
+                let p = Path::new("/home/eugene/projects/rusty-chess/rchess.log");
+                let mut file = match File::open_mode(&p, Append, ReadWrite) {
+                    Ok(f) => f,
+                    Err(e) => fail!("file error: {}", e),
+                };
+                write!(&mut file, ">>{}", line);
+                writeln!(&mut file, "{}", cmd);
+                for r in responses.iter() {
+                    writeln!(&mut file, "<<{}", r);
+                }
+            }
+        }
+    }
+
+    fn think(&self) -> Move {
+        use std::rand;
+        let moves:Vec<Move> = self.position.gen_moves().collect();
+        let index = rand::random::<uint>() % moves.len();
+        moves[index]
+    }
+
+    fn set_position(&mut self, pos: &Position, moves:&Vec<UciMove>) {
+        self.position = *pos;
+        for uci_move in moves.iter() {
+            let move = uci_to_move(&self.position.board, uci_move);
+            self.position.apply_move(&move);
         }
     }
 }
@@ -100,7 +176,7 @@ fn move_to_uci(move: &Move, color: Color) -> UciMove {
                 }
             }
         }
-        NUllMove => fail!("null move is not supposed to get out to uci")
+        NullMove => fail!("null move is not supposed to get out to uci")
     }
 }
 
@@ -165,12 +241,15 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
             Some(index) => index + 1,
             None => return Err("fen or startpos is expected after 'position' command".to_string())
         };
-        let position_str = line.slice_from(position_index);
+        let mut position_str = line.slice_from(position_index);
         let position = if position_str.starts_with("startpos") {
             //initial position
             parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
         } else {
-            try!(parse_fen(position_str))
+            if position_str.starts_with("fen") {
+                position_str = position_str.slice_from("fen".len())
+            }
+            try!(parse_fen(skip_spaces(position_str)))
         };
         let moves_index = match line.find_str("moves ") {
             Some(index) => index + "moves ".len(),
@@ -290,12 +369,12 @@ fn parse_position_command_test() {
     assert_eq!(moves[1], UciMove { from:e7, to:e5, promotion:None});
     assert_eq!(moves[2], UciMove { from:a7, to:a8, promotion:Some(Rook)});
 
-    let cmd = parse_command("position 8/8/8/8/8/8/8/8 w - - 200 999 moves").unwrap();
+    let cmd = parse_command("position fen r1b1k1nr/ppp2ppp/2n5/2b1q3/3p4/P1P2pPN/1P5P/RNBQKB1R w KQkq - 0 10\n").unwrap();
     let (pos, moves) = match cmd {
         CmdPosition(pos, moves) => (pos, moves),
         _ => fail!("wrong command")
     };
-    assert_eq!(pos, parse_fen("8/8/8/8/8/8/8/8 w - - 200 999").unwrap());
+    assert_eq!(pos, parse_fen("r1b1k1nr/ppp2ppp/2n5/2b1q3/3p4/P1P2pPN/1P5P/RNBQKB1R w KQkq - 0 10").unwrap());
     assert_eq!(moves.len(), 0);
 }
 

@@ -310,6 +310,7 @@ impl Board {
 
 impl fmt::Show for Board {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
+        try!(writeln!(f, ""))
         for rank in range_step(7i, -1, -1) {
             for file in range(0i, 8) {
                 let sq = Square::new(file as u8, rank as u8);

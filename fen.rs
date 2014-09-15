@@ -126,7 +126,8 @@ fn parse_int(iter: &mut Chars) -> Result<u16 , String> {
                 result *= 10;
                 result += ((c as u32) - ('0' as u32)) as u16;
             }
-            None | Some(' ') => break,
+            None => break,
+            Some(c) if c.is_whitespace() => break,
             c => return Err(format!("Expected integer move value instead of {0}", c))
         }
     }
