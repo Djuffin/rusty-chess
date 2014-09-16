@@ -441,7 +441,7 @@ fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
 
 #[test]
 fn rook_moves_test() {
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1"; 
     assert_squares(fen, a1, [a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
     assert_squares(fen, d5, [a5, b5, c5, d4, d6, d7, d8]);
@@ -458,7 +458,7 @@ fn rook_moves_test() {
 
 #[test]
 fn bishop_moves_test() {
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B w - - 0 1"; 
     assert_squares(fen, d4, [c3, e5, f6, g7, h8, a7, b6, c5, e3, f2]);
     assert_squares(fen, h1, [a8, b7, c6, d5, e4, f3, g2]);
@@ -470,7 +470,7 @@ fn bishop_moves_test() {
 
 #[test]
 fn queen_moves_test() {
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let fen = "Q7/8/5q2/8/8/2Q5/8/8 w - - 0 1"; 
     assert_squares(fen, a8, [a1, a2, a3, a4, a5, a6, a7, 
                              b8, c8, d8, e8, f8, g8, h8,
@@ -489,7 +489,7 @@ fn queen_moves_test() {
 
 #[test]
 fn knight_moves_test() {
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let fen = "N7/8/7p/4n3/6n1/8/5p2/8 w - - 0 1";
     assert_squares(fen, a8, [b6, c7]);  
 
@@ -500,7 +500,7 @@ fn knight_moves_test() {
 
 #[test]
 fn king_moves_test() {
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let fen = "rn2k2r/8/8/2K2k2/8/8/8/R3K1NR w KQkq - 0 1";
     assert_squares(fen, c5, [c4, c6, b5, d5, d4, d6, b4, b6]);
     assert_squares(fen, e1, [d1, d2, e2, f2, f1]);
@@ -514,7 +514,7 @@ fn king_moves_test() {
 
 #[test]
 fn pawn_moves_test() {
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 w - - 0 1";
 
     assert_squares(fen, a2, [a3, a4]);    

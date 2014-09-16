@@ -37,7 +37,7 @@ fn assert_perft(fen:&str, expected_results:&[u64], depth:uint) {
 #[test]
 fn initial_position_suite() {
     //source: https://chessprogramming.wikispaces.com/Perft+Results
-    ::tables::init_square_data();  
+    ::tables::init_tables();  
     let depth = 6;  
 
     assert_perft("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", [ 20, 400, 8902, 197281, 4865609, 119060324], depth);
@@ -46,7 +46,7 @@ fn initial_position_suite() {
 #[test]
 fn kiwipete_suite() {
     //source: https://chessprogramming.wikispaces.com/Perft+Results
-    ::tables::init_square_data();  
+    ::tables::init_tables();  
     let depth = 5;  
 
     assert_perft("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1", [48, 2039, 97862, 4085603, 193690690, 8031647685 ], depth);
@@ -55,7 +55,7 @@ fn kiwipete_suite() {
 #[test]
 fn steven_edwards_suite() {
     //source: https://chessprogramming.wikispaces.com/Perft+Results
-    ::tables::init_square_data();  
+    ::tables::init_tables();  
     let depth = 5;  
 
     assert_perft("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10", [46, 2079, 89890, 3894594, 164075551, 6923051137, 287188994746, 11923589843526, 490154852788714], depth);
@@ -64,7 +64,7 @@ fn steven_edwards_suite() {
 #[test]
 fn chessprogramming_wiki_suite() {
     //source: https://chessprogramming.wikispaces.com/Perft+Results
-    ::tables::init_square_data();  
+    ::tables::init_tables();  
     let depth = 6;  
 
     assert_perft("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1", [14, 191, 2812, 43238, 674624, 11030083, 178633661], depth);
@@ -75,7 +75,7 @@ fn chessprogramming_wiki_suite() {
 #[test]
 fn rocechess_suite() {
     //source: http://www.rocechess.ch/perft.html
-    ::tables::init_square_data();
+    ::tables::init_tables();
     let depth = 6;
 
     assert_perft("n1n5/PPPk4/8/8/8/8/4Kppp/5N1N b - - 0 1", [24, 492, 9483, 182838, 3605103, 71179139], depth);

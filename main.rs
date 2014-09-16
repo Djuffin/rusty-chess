@@ -14,9 +14,10 @@ pub mod uci;
 pub mod squares;
 #[cfg(test)]
 mod perft_tests;
+mod eval;
 
 
 pub fn main() {
-    tables::init_square_data();
+    tables::init_tables();
     uci::UciEngine::new().main_loop();
 }

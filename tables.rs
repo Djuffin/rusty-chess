@@ -1,8 +1,8 @@
 use bitset::BitSet;
-use types::{Square, Color, White, Black};
+use types::*;
 
-
-struct SquareData {
+//data that helps generate move available for different pieces from each square
+struct SquareMoveData {
     //This mask contains active bits in the same file as this square.
     //The square itself is 0.
     file_mask : BitSet,
@@ -31,10 +31,10 @@ struct SquareData {
     //This mask contains active bits in locations where a pawn 
     //can take from this square.
     white_pawn_attacks_mask : BitSet,
-    black_pawn_attacks_mask : BitSet    
+    black_pawn_attacks_mask : BitSet,
 }
 
-static EMPTY_SQ_DATA  : SquareData = SquareData { 
+static EMPTY_SQ_MOVE_DATA  : SquareMoveData = SquareMoveData { 
     file_mask: BitSet { bits:0 },
     diagonal_mask: BitSet { bits:0 },
     antidiagonal_mask: BitSet { bits:0 }, 
@@ -45,7 +45,29 @@ static EMPTY_SQ_DATA  : SquareData = SquareData {
     black_pawn_attacks_mask: BitSet { bits:0 },
     black_pawn_moves_mask: BitSet { bits:0 }
 };
-static mut SQ_DATA:[SquareData, ..64] = [ EMPTY_SQ_DATA, ..64];
+static mut SQ_MOVE_DATA:[SquareMoveData, ..64] = [ EMPTY_SQ_MOVE_DATA, ..64];
+
+//data that helps to eastimate relative value of each a piece in each square
+struct PieceValueData {
+    pawn   : i8,
+    bishop : i8,
+    knight : i8,
+    rook   : i8,
+    queen  : i8, 
+    king   : i8
+}
+
+static EMPTY_PIECE_VALUE : PieceValueData = PieceValueData {
+    pawn   : 0,
+    bishop : 0,
+    knight : 0,
+    rook   : 0,
+    queen  : 0, 
+    king   : 0
+};
+
+static mut SQ_WHITE_PIECE_VALUES:[PieceValueData, ..64] = [ EMPTY_PIECE_VALUE, ..64];
+static mut SQ_BLACK_PIECE_VALUES:[PieceValueData, ..64] = [ EMPTY_PIECE_VALUE, ..64];
 
 
 static BYTE_REVERSE:[u8, ..256] = 
@@ -73,23 +95,44 @@ pub fn reverse(x:u8) -> u8 {
 }
 
 #[inline]
+pub fn get_relative_piece_value(sq:Square, piece: Piece) -> i16 {
+    unsafe {
+        let Piece(kind, color) = piece;
+        let array = match color {
+            White => &SQ_WHITE_PIECE_VALUES,
+            Black => &SQ_BLACK_PIECE_VALUES
+        };
+        let data = &array[sq.file_and_rank() as uint];
+        let result = match kind {
+            Pawn => data.pawn,
+            Bishop => data.bishop,
+            Knight => data.knight,
+            Rook => data.rook,
+            Queen => data.queen,
+            King => data.king
+        };
+        result as i16
+    }
+}
+
+#[inline]
 pub fn get_diagonal_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].diagonal_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as uint].diagonal_mask
     }
 }
 
 #[inline]
 pub fn get_antidiagonal_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].antidiagonal_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as uint].antidiagonal_mask
     }
 }
 
 #[inline]
 pub fn get_file_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_DATA[sq.file_and_rank() as uint].file_mask;
+        let result = SQ_MOVE_DATA[sq.file_and_rank() as uint].file_mask;
         debug_assert!(!result.is_empty(), "file tables are not initialized");
         result
     }
@@ -98,7 +141,7 @@ pub fn get_file_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_knight_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_DATA[sq.file_and_rank() as uint].knight_moves_mask;
+        let result = SQ_MOVE_DATA[sq.file_and_rank() as uint].knight_moves_mask;
         debug_assert!(!result.is_empty(), "knight tables are not initialized");
         result
 
@@ -108,7 +151,7 @@ pub fn get_knight_moves_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_king_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_DATA[sq.file_and_rank() as uint].king_moves_mask;
+        let result = SQ_MOVE_DATA[sq.file_and_rank() as uint].king_moves_mask;
         debug_assert!(!result.is_empty(), "king tables are not initialized");
         result
     }
@@ -117,33 +160,38 @@ pub fn get_king_moves_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_white_pawn_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].white_pawn_moves_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as uint].white_pawn_moves_mask
     }
 }
 
 #[inline]
 pub fn get_white_pawn_attacks_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].white_pawn_attacks_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as uint].white_pawn_attacks_mask
     }
 }
 
 #[inline]
 pub fn get_black_pawn_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].black_pawn_moves_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as uint].black_pawn_moves_mask
     }
 }
 
 #[inline]
 pub fn get_black_pawn_attacks_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_DATA[sq.file_and_rank() as uint].black_pawn_attacks_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as uint].black_pawn_attacks_mask
     }
 }
 
 
-pub fn init_square_data() {
+pub fn init_tables() {
+    init_move_data();
+}
+
+
+fn init_move_data() {
     let mut file_mask = 0x0101010101010101u64; //all active bits on a file where sq belongs
     for file in range(0i, 8) {
         let file_byte = 1u8 << file as uint; //byte with one active bit number file
@@ -169,7 +217,7 @@ pub fn init_square_data() {
                                     shift(file_byte, 7u, rank - 7);
             
             unsafe {
-                SQ_DATA[sq.file_and_rank()  as uint] = SquareData {
+                SQ_MOVE_DATA[sq.file_and_rank()  as uint] = SquareMoveData {
                     file_mask: BitSet::new(file_mask) & (!sq_set),
                     diagonal_mask: BitSet::new(diagonal_mask) & (!sq_set),
                     antidiagonal_mask: BitSet::new(antidiagonal_mask) & (!sq_set),
