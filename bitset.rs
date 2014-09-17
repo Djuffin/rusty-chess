@@ -62,6 +62,11 @@ impl BitSet {
         self.bits == 0
     }
 
+    #[inline]
+    pub fn count(self) -> uint {
+        self.bits.count_ones()
+    }
+
 }
 
 impl Iterator<Square> for SquareIter {

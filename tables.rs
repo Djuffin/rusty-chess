@@ -47,28 +47,6 @@ static EMPTY_SQ_MOVE_DATA  : SquareMoveData = SquareMoveData {
 };
 static mut SQ_MOVE_DATA:[SquareMoveData, ..64] = [ EMPTY_SQ_MOVE_DATA, ..64];
 
-//data that helps to eastimate relative value of each a piece in each square
-struct PieceValueData {
-    pawn   : i8,
-    bishop : i8,
-    knight : i8,
-    rook   : i8,
-    queen  : i8, 
-    king   : i8
-}
-
-static EMPTY_PIECE_VALUE : PieceValueData = PieceValueData {
-    pawn   : 0,
-    bishop : 0,
-    knight : 0,
-    rook   : 0,
-    queen  : 0, 
-    king   : 0
-};
-
-static mut SQ_WHITE_PIECE_VALUES:[PieceValueData, ..64] = [ EMPTY_PIECE_VALUE, ..64];
-static mut SQ_BLACK_PIECE_VALUES:[PieceValueData, ..64] = [ EMPTY_PIECE_VALUE, ..64];
-
 
 static BYTE_REVERSE:[u8, ..256] = 
 [0x0, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0, 
@@ -92,27 +70,6 @@ static BYTE_REVERSE:[u8, ..256] =
 #[inline]
 pub fn reverse(x:u8) -> u8 {
     BYTE_REVERSE[x as uint] 
-}
-
-#[inline]
-pub fn get_relative_piece_value(sq:Square, piece: Piece) -> i16 {
-    unsafe {
-        let Piece(kind, color) = piece;
-        let array = match color {
-            White => &SQ_WHITE_PIECE_VALUES,
-            Black => &SQ_BLACK_PIECE_VALUES
-        };
-        let data = &array[sq.file_and_rank() as uint];
-        let result = match kind {
-            Pawn => data.pawn,
-            Bishop => data.bishop,
-            Knight => data.knight,
-            Rook => data.rook,
-            Queen => data.queen,
-            King => data.king
-        };
-        result as i16
-    }
 }
 
 #[inline]
