@@ -15,6 +15,7 @@ pub mod squares;
 #[cfg(test)]
 mod perft_tests;
 mod eval;
+mod search;
 
 
 pub fn main() {

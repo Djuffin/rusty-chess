@@ -4,6 +4,7 @@ use types::*;
 use fen::parse_fen;
 use std::str::{Chars, StrSlice};
 use std::fmt;
+use search::search;
 
 
 #[deriving(PartialEq)]
@@ -16,6 +17,7 @@ pub struct UciMove {
 #[deriving(PartialEq, Show)]
 pub enum SearchOption {
     MovetimeMsc(uint),
+    Depth(uint),
     Infinity
 }
 
@@ -93,10 +95,16 @@ impl UciEngine {
                     self.set_position(pos, moves);
                     vec![]
                 }
-                CmdGo (_) => {
-                    let move = self.think();
-                    let uci_move = move_to_uci(&move, self.position.next_to_move);
-                    vec![RspInfo(format!("currmove {}", uci_move)), RspBestMove(uci_move)]
+                CmdGo (opt) => {
+                    match self.think(opt) {
+                        Some(move) => {
+                            let uci_move = move_to_uci(&move, self.position.next_to_move);
+                            vec![RspInfo(format!("currmove {}", uci_move)), RspBestMove(uci_move)]
+                        },
+                        None => {
+                            vec![RspInfo(format!("string, no moves found!"))]
+                        }
+                    }
                 },
                 CmdStop => vec![],
                 CmdQuit => { break },
@@ -106,27 +114,30 @@ impl UciEngine {
             for r in responses.iter() {
                 println!("{}", r);
             }
-            // {
-            //     use std::io::{File, Append, ReadWrite};
-            //     let p = Path::new("/home/eugene/projects/rusty-chess/rchess.log");
-            //     let mut file = match File::open_mode(&p, Append, ReadWrite) {
-            //         Ok(f) => f,
-            //         Err(e) => fail!("file error: {}", e),
-            //     };
-            //     write!(&mut file, ">>{}", line);
-            //     writeln!(&mut file, "{}", cmd);
-            //     for r in responses.iter() {
-            //         writeln!(&mut file, "<<{}", r);
-            //     }
-            // }
+            {
+                use std::io::{File, Append, ReadWrite};
+                let p = Path::new("/home/eugene/projects/rusty-chess/rchess.log");
+                let mut file = match File::open_mode(&p, Append, ReadWrite) {
+                    Ok(f) => f,
+                    Err(e) => fail!("file error: {}", e),
+                };
+                write!(&mut file, ">>{}", line);
+                writeln!(&mut file, "{}", cmd);
+                for r in responses.iter() {
+                    writeln!(&mut file, "<<{}", r);
+                }
+            }
         }
     }
 
-    fn think(&self) -> Move {
+    fn think(&self, opt: SearchOption) -> Option<Move> {
         use std::rand;
-        let moves:Vec<Move> = self.position.gen_moves().collect();
-        let index = rand::random::<uint>() % moves.len();
-        moves[index]
+        let depth = match opt {
+            Depth(d) => d,
+            Infinity => 5,
+            MovetimeMsc(_) => 3,
+        };
+        search(&self.position, depth)
     }
 
     fn set_position(&mut self, pos: &Position, moves:&Vec<UciMove>) {
@@ -221,6 +232,7 @@ fn uci_to_move(board: &Board, move: &UciMove) -> Move {
 }
 
 pub fn parse_command(line: &str) -> Result<Command, String> {
+    let line = if line.ends_with("\n") { line.slice_to(line.len() - 1) } else { line };
     if line.starts_with("ucinewgame") {
         return Ok(CmdUciNewGame);
     }    
@@ -281,6 +293,13 @@ fn pares_search_option(input: &str) -> Result<SearchOption, String> {
             None => { return Err("Movetime is invalid or not provided".to_string()); }
         };
         return Ok (MovetimeMsc(time));
+    } else if input.starts_with("depth") {
+        let num_str = skip_spaces(input.slice_from("depth".len()));
+        let depth:uint = match from_str(num_str) {
+            Some(t) => t,
+            None => { return Err("Depth is invalid or not provided".to_string()); }
+        };
+        return Ok (Depth(depth));
     } else {
         return Ok (Infinity);
     }
@@ -351,7 +370,7 @@ fn parse_go_command_test() {
 fn parse_position_command_test() {
     let startpos = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
 
-    let cmd = parse_command("position startpos").unwrap();
+    let cmd = parse_command("position startpos\n").unwrap();
     let (pos, moves) = match cmd {
         CmdPosition(pos, moves) => (pos, moves),
         _ => fail!("wrong command")
@@ -359,7 +378,7 @@ fn parse_position_command_test() {
     assert_eq!(pos, startpos);
     assert_eq!(moves.len(), 0);
 
-    let cmd = parse_command("position startpos moves e2e4 e7e5 a7a8r").unwrap();
+    let cmd = parse_command("position startpos moves e2e4 e7e5 a7a8r\n").unwrap();
     let (pos, moves) = match cmd {
         CmdPosition(pos, moves) => (pos, moves),
         _ => fail!("wrong command")
@@ -380,11 +399,12 @@ fn parse_position_command_test() {
 
 #[test]
 fn parse_simple_commands_test() {
-    assert_eq!(parse_command("uci"), Ok(CmdUci));
-    assert_eq!(parse_command("ucinewgame"), Ok(CmdUciNewGame));
-    assert_eq!(parse_command("isready"), Ok(CmdIsReady));
-    assert_eq!(parse_command("quit"), Ok(CmdQuit));
-    assert_eq!(parse_command("stop"), Ok(CmdStop));
+    assert_eq!(parse_command("uci\n"), Ok(CmdUci));
+    assert_eq!(parse_command("ucinewgame\n"), Ok(CmdUciNewGame));
+    assert_eq!(parse_command("isready\n"), Ok(CmdIsReady));
+    assert_eq!(parse_command("quit\n"), Ok(CmdQuit));
+    assert_eq!(parse_command("stop\n"), Ok(CmdStop));
+    assert_eq!(parse_command("go depth 3\n"), Ok(CmdGo(Depth(3))));
 }
 
 }
