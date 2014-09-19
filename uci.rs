@@ -114,24 +114,23 @@ impl UciEngine {
             for r in responses.iter() {
                 println!("{}", r);
             }
-            {
-                use std::io::{File, Append, ReadWrite};
-                let p = Path::new("/home/eugene/projects/rusty-chess/rchess.log");
-                let mut file = match File::open_mode(&p, Append, ReadWrite) {
-                    Ok(f) => f,
-                    Err(e) => fail!("file error: {}", e),
-                };
-                write!(&mut file, ">>{}", line);
-                writeln!(&mut file, "{}", cmd);
-                for r in responses.iter() {
-                    writeln!(&mut file, "<<{}", r);
-                }
-            }
+            // {
+            //     use std::io::{File, Append, ReadWrite};
+            //     let p = Path::new("/home/eugene/projects/rusty-chess/rchess.log");
+            //     let mut file = match File::open_mode(&p, Append, ReadWrite) {
+            //         Ok(f) => f,
+            //         Err(e) => fail!("file error: {}", e),
+            //     };
+            //     write!(&mut file, ">>{}", line);
+            //     writeln!(&mut file, "{}", cmd);
+            //     for r in responses.iter() {
+            //         writeln!(&mut file, "<<{}", r);
+            //     }
+            // }
         }
     }
 
     fn think(&self, opt: SearchOption) -> Option<Move> {
-        use std::rand;
         let depth = match opt {
             Depth(d) => d,
             Infinity => 5,

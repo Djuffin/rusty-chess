@@ -20,8 +20,8 @@ fn internal_search(p: &Position, eval: &Evaluator, depth: uint) -> (Option<Move>
             let (_, score) = internal_search(&p1, eval, depth - 1);
             score
         };
-        if (color == White && score > best_score) ||
-           (color == Black && score < best_score) {
+        if (color == White && score >= best_score) ||
+           (color == Black && score <= best_score) {
             best_score = score;
             best_move = Some (move);
         }

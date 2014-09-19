@@ -1,7 +1,6 @@
 #![crate_name = "rchess"]
 #![crate_type = "bin"]
 #![feature(globs)]
-use types::*;
 
 pub mod types;
 pub mod bitset;

@@ -1,6 +1,7 @@
 //Position evaluation
 use types::*;
 
+#[deriving(PartialEq, Show)]
 pub enum GameStage {
     Opening, Middlegame, Endgame
 }
@@ -9,6 +10,9 @@ pub trait Evaluator {
     //Assigns for each position a score, that measures adventage of whites (positive score) or blacks (negative score)
     //in centipawns (1/100 of a pawn)
     fn eval(&self, position: &Position) -> i32;
+
+    //tells what stage of the game we are at
+    fn classify(&self, position: &Position) -> GameStage;
 }
 
 
@@ -159,11 +163,12 @@ impl SimpleEvaluator {
 
     fn eval_piece_positions(&self, position: &Position) -> i32 {
         let board = &position.board;
+        let stage = self.classify(position);
         let mut result = 0i32;
         for &color in [White, Black].iter() {
             for &kind in [Pawn, Knight, Bishop, Rook, Queen, King].iter() {
                 for sq in board.get_pieces(kind, color) {
-                    result += self.eval_one_piece_position(Piece(kind, color), sq);
+                    result += self.eval_one_piece_position(Piece(kind, color), sq, stage);
                 }
             }
         }
@@ -171,7 +176,7 @@ impl SimpleEvaluator {
     }
 
     #[inline]
-    fn eval_one_piece_position(&self, piece: Piece, sq:Square) -> i32 {
+    fn eval_one_piece_position(&self, piece: Piece, sq:Square, stage: GameStage) -> i32 {
         let table = match piece {
             Piece(Pawn, White) => self.white_pawn_weights,
             Piece(Pawn, Black) => self.black_pawn_weights,  
@@ -188,8 +193,11 @@ impl SimpleEvaluator {
             Piece(Queen, White) => self.white_queen_weights,
             Piece(Queen, Black) => self.black_queen_weights,  
 
+            Piece(King, White) if stage == Endgame => self.white_endgame_king_weights,
             Piece(King, White) => self.white_king_weights,
-            Piece(King, Black) => self.black_king_weights,  
+
+            Piece(King, Black) if stage == Endgame => self.black_endgame_king_weights,
+            Piece(King, Black) => self.black_king_weights, 
         };
 
         if piece.color() == White {
@@ -204,6 +212,23 @@ impl Evaluator for SimpleEvaluator {
     fn eval(&self, position: &Position) -> i32 {
         self.eval_material(position) +
         self.eval_piece_positions(position)
+    }
+
+    fn classify(&self, position: &Position) -> GameStage {
+        let board = &position.board;
+        let no_queens = board.queens.is_empty();
+        let no_rooks = board.rooks.is_empty();
+        let minor_pieces_count = (board.bishops | board.knights).count();
+
+        if  no_queens || (no_rooks && minor_pieces_count <= 2) {
+            return Endgame;
+        }
+
+        if position.full_moves < 8 {
+            return Opening;
+        } 
+
+        Middlegame
     }
 }
 
@@ -246,6 +271,34 @@ fn simple_eval_test() {
     let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap(); 
     let score = evaluator.eval(&position);
     assert_eq!(score, 0)
+
+    //endgame position
+    let position = parse_fen("k7/8/8/3K4/8/8/8/8 w KQkq - 0 1").unwrap(); 
+    let score = evaluator.eval(&position);
+    assert_eq!(score, 90) 
+}
+
+#[test]
+fn classify_test() {
+    let evaluator = SimpleEvaluator::new();
+
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap(); 
+    let stage = evaluator.classify(&position);
+    assert_eq!(stage, Opening);
+
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 9").unwrap(); 
+    let stage = evaluator.classify(&position);
+    assert_eq!(stage, Middlegame);
+
+    let position = parse_fen("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w KQkq - 0 9").unwrap(); 
+    let stage = evaluator.classify(&position);
+    assert_eq!(stage, Endgame);
+
+    let position = parse_fen("2bqk3/pppppppp/8/8/8/8/PPPPPPPP/3QKN2 w KQkq - 0 9").unwrap(); 
+    let stage = evaluator.classify(&position);
+    assert_eq!(stage, Endgame);
+    
+
 }
 
 }
