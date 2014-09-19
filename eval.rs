@@ -272,9 +272,27 @@ fn simple_eval_test() {
     let score = evaluator.eval(&position);
     assert_eq!(score, 0)
 
-    //endgame position
-    let position = parse_fen("k7/8/8/3K4/8/8/8/8 w KQkq - 0 1").unwrap(); 
+    //middle game position
+    let position = parse_fen("qk5r/8/8/3K4/8/8/8/R6Q w - - 0 40").unwrap(); 
+    let stage = evaluator.classify(&position);
+    assert_eq!(stage, Middlegame);
     let score = evaluator.eval(&position);
+    //middlegame position
+    //white king on d5 = -50
+    //black king in b8 = 30
+    //result = -50 - 30 = -80
+    //rooks and queens nullify each other
+    assert_eq!(score, -80) 
+
+    //endgame position
+    let position = parse_fen("k7/8/8/3K4/8/8/8/8 w - - 0 40").unwrap(); 
+    let stage = evaluator.classify(&position);
+    assert_eq!(stage, Endgame);
+    let score = evaluator.eval(&position);
+    //endgame table is used
+    //white king in the center = 40
+    //black king in the corner = -50
+    //result = 40 - (-50) = 90
     assert_eq!(score, 90) 
 }
 
@@ -282,19 +300,19 @@ fn simple_eval_test() {
 fn classify_test() {
     let evaluator = SimpleEvaluator::new();
 
-    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap(); 
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1").unwrap(); 
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Opening);
 
-    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 9").unwrap(); 
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 9").unwrap(); 
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Middlegame);
 
-    let position = parse_fen("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w KQkq - 0 9").unwrap(); 
+    let position = parse_fen("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w - - 0 9").unwrap(); 
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Endgame);
 
-    let position = parse_fen("2bqk3/pppppppp/8/8/8/8/PPPPPPPP/3QKN2 w KQkq - 0 9").unwrap(); 
+    let position = parse_fen("2bqk3/pppppppp/8/8/8/8/PPPPPPPP/3QKN2 w - - 0 9").unwrap(); 
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Endgame);
     
