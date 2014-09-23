@@ -6,10 +6,13 @@ pub enum GameStage {
     Opening, Middlegame, Endgame
 }
 
+pub type Score = i32;
+pub static INFINITY: Score = -(::std::i32::MIN);
+
 pub trait Evaluator {
     //Assigns for each position a score, that measures adventage of whites (positive score) or blacks (negative score)
     //in centipawns (1/100 of a pawn)
-    fn eval(&self, position: &Position) -> i32;
+    fn eval(&self, position: &Position) -> Score;
 
     //tells what stage of the game we are at
     fn classify(&self, position: &Position) -> GameStage;
@@ -138,7 +141,7 @@ impl SimpleEvaluator {
         }
     }
 
-    fn eval_material(&self, position: &Position) -> i32 {
+    fn eval_material(&self, position: &Position) -> Score {
         let board = &position.board;
         let queens = (board.queens & board.whites).count() as i32 -
                      (board.queens & board.blacks).count() as i32;
@@ -161,7 +164,7 @@ impl SimpleEvaluator {
         (pawns * 100) + (knights * 320) + (bishops * 330) + (rooks * 500) + (queens * 900) + (kings * 20000)
     }
 
-    fn eval_piece_positions(&self, position: &Position) -> i32 {
+    fn eval_piece_positions(&self, position: &Position) -> Score {
         let board = &position.board;
         let stage = self.classify(position);
         let mut result = 0i32;
@@ -176,7 +179,7 @@ impl SimpleEvaluator {
     }
 
     #[inline]
-    fn eval_one_piece_position(&self, piece: Piece, sq:Square, stage: GameStage) -> i32 {
+    fn eval_one_piece_position(&self, piece: Piece, sq:Square, stage: GameStage) -> Score {
         let table = match piece {
             Piece(Pawn, White) => self.white_pawn_weights,
             Piece(Pawn, Black) => self.black_pawn_weights,  
@@ -201,15 +204,15 @@ impl SimpleEvaluator {
         };
 
         if piece.color() == White {
-            table[sq.file_and_rank() as uint] as i32
+            table[sq.file_and_rank() as uint] as Score
         } else {
-            -table[sq.file_and_rank() as uint] as i32
+            -table[sq.file_and_rank() as uint] as Score
         } 
     }
 }
 
 impl Evaluator for SimpleEvaluator {
-    fn eval(&self, position: &Position) -> i32 {
+    fn eval(&self, position: &Position) -> Score {
         self.eval_material(position) +
         self.eval_piece_positions(position)
     }

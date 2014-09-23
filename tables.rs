@@ -255,7 +255,7 @@ static FILE_GH:u64 = 0b11000000;
 
 fn clear_files(mask:u64, b:BitSet) -> BitSet {
     let mut mask64 = 0u64;
-    for i in range(0i, 8) {
+    for _ in range(0i, 8) {
         mask64 <<= 8;
         mask64 |= mask;
     }

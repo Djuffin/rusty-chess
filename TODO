@@ -1,0 +1,4 @@
+Possible improvements:
+1. Magic Bitboards for movegen
+2. Fit Move into 16 bits
+3. Generate all moves at once into a vector without use of iterator (?)
