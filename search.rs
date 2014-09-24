@@ -109,7 +109,9 @@ fn alphabeta(evaluator: &Evaluator, pos: &Position, line:&mut Line, win:Window, 
 
 pub fn search(pos: &Position, depth: uint) -> Option<Move> {
     let mut search = Search::new(pos);
-    search.calculate_lines(depth);
+    for i in range(0, depth + 1) {
+        search.calculate_lines(i);
+    }
     let moves = search.top_moves(3);
     if moves.len() > 0 {
         Some(moves[0])
@@ -118,31 +120,3 @@ pub fn search(pos: &Position, depth: uint) -> Option<Move> {
     }
 
 }
-
-/*
-fn internal_search(p: &Position, eval: &Evaluator, depth: uint) -> (Option<Move>, i32) {
-    let color = p.next_to_move;
-    let mut best_move:Option<Move> = None;
-    let mut best_score = if color == White { -INFINITY  } else { INFINITY };
-    for move in p.gen_moves() {
-        let mut p1 = *p;
-        p1.apply_move(&move);
-        let score = if depth == 0 { 
-            eval.eval(&p1)
-        } else {
-            let (_, score) = internal_search(&p1, eval, depth - 1);
-            score
-        };
-        if (color == White && score >= best_score) ||
-           (color == Black && score <= best_score) {
-            best_score = score;
-            best_move = Some (move);
-        }
-    }
-    if best_move.is_none() && !p.is_check() {
-        //no moves, but no check - stalemate
-        //draw!
-        best_score = 0;
-    }
-    (best_move, best_score)
-} */
