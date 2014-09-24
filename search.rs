@@ -66,7 +66,7 @@ fn alphabeta(evaluator: &Evaluator, pos: &Position, line:&mut Line, win:Window, 
     let mut window = Window { alpha: win.alpha, beta:win.beta };
     for child in line.children.iter_mut() {
         let mut new_pos = *pos;
-        new_pos.apply_move(&line.move);   
+        new_pos.apply_move(&child.move);   
         
         let score = if depth == 0 {
             evaluator.eval(&new_pos)

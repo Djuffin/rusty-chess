@@ -7,7 +7,7 @@ pub enum GameStage {
 }
 
 pub type Score = i32;
-pub static INFINITY: Score = -(::std::i32::MIN);
+pub static INFINITY: Score = ::std::i32::MAX;
 
 pub trait Evaluator {
     //Assigns for each position a score, that measures adventage of whites (positive score) or blacks (negative score)
