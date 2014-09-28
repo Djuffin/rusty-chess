@@ -19,3 +19,13 @@ pub fn reverse(x:u8) -> u8 {
     let r = ((x as u64) * 0x0202020202u64 & 0x010884422010u64) % 1023;
     r as u8
 }
+
+pub fn write_to_log(line: String) {
+    use std::io::{File, Append, ReadWrite};
+    let p = Path::new("rchess.log");
+    let mut file = match File::open_mode(&p, Append, ReadWrite) {
+        Ok(f) => f,
+        Err(e) => fail!("file error: {}", e),
+    };
+    let _ = writeln!(&mut file, "{}", line);
+}

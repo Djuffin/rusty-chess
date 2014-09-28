@@ -127,7 +127,7 @@ impl fmt::Show for Square {
 
 #[deriving(PartialEq, Show)]
 pub enum CastlingRight {
-    NoCastling, QueenCastling, KingCastling, BothCastling
+    NoCastling = 0, QueenCastling = 1, KingCastling = 2, BothCastling = 3
 }
 
 impl CastlingRight {

@@ -15,6 +15,7 @@ pub mod squares;
 mod perft_tests;
 mod eval;
 mod search;
+mod hash;
 
 
 pub fn main() {

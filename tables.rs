@@ -66,6 +66,8 @@ static BYTE_REVERSE:[u8, ..256] =
  0x7, 0x87, 0x47, 0xC7, 0x27, 0xA7, 0x67, 0xE7, 0x17, 0x97, 0x57, 0xD7, 0x37, 0xB7, 0x77, 0xF7, 
  0xF, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF]; 
 
+ static mut RANDOM_NUMBERS:[u64, ..850] = [0, ..850];
+
 //this function reverses bits in a given byte
 #[inline]
 pub fn reverse(x:u8) -> u8 {
@@ -142,11 +144,30 @@ pub fn get_black_pawn_attacks_mask(sq:Square) -> BitSet {
     }
 }
 
+#[inline]
+pub fn get_random_number(n:uint) -> u64 {
+    unsafe {
+        debug_assert!(n < RANDOM_NUMBERS.len());
+        RANDOM_NUMBERS[n]
+    }
+}
+
 
 pub fn init_tables() {
     init_move_data();
+    init_random_numbers();
 }
 
+fn init_random_numbers() {
+    use std::rand::{Isaac64Rng, SeedableRng, Rng};
+    let seed:&[u64] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let mut generator:Isaac64Rng = SeedableRng::from_seed(seed); 
+    unsafe {
+        for i in range(0, RANDOM_NUMBERS.len()) {
+            RANDOM_NUMBERS[i] = generator.next_u64();
+        }
+    }
+}
 
 fn init_move_data() {
     let mut file_mask = 0x0101010101010101u64; //all active bits on a file where sq belongs
