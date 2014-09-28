@@ -147,7 +147,6 @@ pub fn get_black_pawn_attacks_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_random_number(n:uint) -> u64 {
     unsafe {
-        debug_assert!(n < RANDOM_NUMBERS.len());
         RANDOM_NUMBERS[n]
     }
 }
@@ -160,7 +159,15 @@ pub fn init_tables() {
 
 fn init_random_numbers() {
     use std::rand::{Isaac64Rng, SeedableRng, Rng};
-    let seed:&[u64] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    let seed:&[u64] = &[
+        0xe0d639d1dacd02beu64,
+        0xef96c10706fd5913u64,
+        0x2ecb7a7419590303u64,
+        0x109a590b6eeb408cu64,
+        0x532c075b28329e05u64,
+        0x25bb59f5b8a75bd1u64,
+        0x676ace4d6694cd1du64
+    ];
     let mut generator:Isaac64Rng = SeedableRng::from_seed(seed); 
     unsafe {
         for i in range(0, RANDOM_NUMBERS.len()) {
