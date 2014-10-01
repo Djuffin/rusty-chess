@@ -2,7 +2,7 @@ use std::fmt;
 use std::iter::range_step;
 use types::Square;
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq)]
 pub struct BitSet {
     pub bits:u64
 }

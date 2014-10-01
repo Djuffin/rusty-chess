@@ -2,7 +2,6 @@
 use types::*;
 use tables::get_random_number;
 
-
 pub fn calc_position_hash(position: &Position) -> u64 {
     let mut result:u64 = 0;
     let board = &position.board;

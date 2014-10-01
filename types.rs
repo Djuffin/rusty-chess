@@ -125,7 +125,7 @@ impl fmt::Show for Square {
 }
 
 
-#[deriving(PartialEq, Show)]
+#[deriving(PartialEq, Eq, Show)]
 pub enum CastlingRight {
     NoCastling = 0, QueenCastling = 1, KingCastling = 2, BothCastling = 3
 }
@@ -199,7 +199,7 @@ impl fmt::Show for Move {
 
 
 
-#[deriving(PartialEq)]
+#[deriving(PartialEq, Eq)]
 pub struct Board {
     pub whites:  BitSet,
     pub blacks:  BitSet,
@@ -327,7 +327,7 @@ impl fmt::Show for Board {
 }
 
 
-#[deriving(PartialEq, Show)]
+#[deriving(PartialEq, Eq, Show)]
 pub struct Position {
     pub board : Board,
     pub full_moves : u16,
