@@ -64,7 +64,7 @@ impl fmt::Show for Response {
             RspUciOk => write!(f, "uciok"),
             RspReadyOk => write!(f, "readyok"),
             RspInfo(ref info) => write!(f, "info {}", info),
-            RspBestMove(ref move) => write!(f, "bestmove {}", move),
+            RspBestMove(ref mv) => write!(f, "bestmove {}", mv),
         }
     }
 }
@@ -97,8 +97,8 @@ impl UciEngine {
                 }
                 CmdGo (opt) => {
                     match self.think(opt) {
-                        Some(move) => {
-                            let uci_move = move_to_uci(&move, self.position.next_to_move);
+                        Some(mv) => {
+                            let uci_move = move_to_uci(&mv, self.position.next_to_move);
                             vec![RspInfo(format!("currmove {}", uci_move)), RspBestMove(uci_move)]
                         },
                         None => {
@@ -129,15 +129,15 @@ impl UciEngine {
     fn set_position(&mut self, pos: &Position, moves:&Vec<UciMove>) {
         self.position = *pos;
         for uci_move in moves.iter() {
-            let move = uci_to_move(&self.position.board, uci_move);
-            self.position.apply_move(&move);
+            let mv = uci_to_move(&self.position.board, uci_move);
+            self.position.apply_move(&mv);
         }
     }
 }
 
-fn move_to_uci(move: &Move, color: Color) -> UciMove {
+fn move_to_uci(mv: &Move, color: Color) -> UciMove {
     use squares::*;
-    match *move {
+    match *mv {
         OrdinalMove(ref mi) => UciMove {
             from: mi.from,
             to: mi.to,
@@ -177,9 +177,9 @@ fn move_to_uci(move: &Move, color: Color) -> UciMove {
     }
 }
 
-fn uci_to_move(board: &Board, move: &UciMove) -> Move {
+fn uci_to_move(board: &Board, mv: &UciMove) -> Move {
     use squares::*;
-    let piece = board.get_piece(move.from);
+    let piece = board.get_piece(mv.from);
     let piece = match piece {
         Some(p) => p,
         None => {
@@ -189,31 +189,31 @@ fn uci_to_move(board: &Board, move: &UciMove) -> Move {
     };
 
     if piece == Piece(King, White) {
-        if move.from == e1 {
-            if move.to == g1 {
+        if mv.from == e1 {
+            if mv.to == g1 {
                 return CastleKingSide;
             } 
-            if move.to == c1 {
+            if mv.to == c1 {
                 return CastleQueenSide;
             } 
         }
     } 
     else if piece == Piece(King, Black) {
-        if move.from == e8 {
-            if move.to == g8 {
+        if mv.from == e8 {
+            if mv.to == g8 {
                 return CastleKingSide;
             } 
-            if move.to == c8 {
+            if mv.to == c8 {
                 return CastleQueenSide;
             } 
         }
     }
 
     OrdinalMove (OrdinalMoveInfo {
-        from: move.from,
-        to: move.to,
+        from: mv.from,
+        to: mv.to,
         kind: piece.kind(),
-        promotion: move.promotion
+        promotion: mv.promotion
     })
 }
 
@@ -328,11 +328,11 @@ fn parse_move(input: &str) -> Result<UciMove, String> {
 
 fn parse_square(iter: &mut Chars) -> Result<Square, String> {
     let file = match iter.next() {
-        Some(c@'a'..'h') => (c as u32) - ('a' as u32),
+        Some(c@'a'...'h') => (c as u32) - ('a' as u32),
         c => return Err(format!("Unexpected move file: {0}", c))
     };
     let rank = match iter.next() {
-        Some(c@'1'..'8') => (c as u32) - ('1' as u32),
+        Some(c@'1'...'8') => (c as u32) - ('1' as u32),
         c => return Err(format!("Unexpected move rank: {0}", c))
     };
     Ok(Square::new(file as u8, rank as u8)) 

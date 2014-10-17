@@ -34,7 +34,7 @@ struct SquareMoveData {
     black_pawn_attacks_mask : BitSet,
 }
 
-static EMPTY_SQ_MOVE_DATA  : SquareMoveData = SquareMoveData { 
+const EMPTY_SQ_MOVE_DATA  : SquareMoveData = SquareMoveData { 
     file_mask: BitSet { bits:0 },
     diagonal_mask: BitSet { bits:0 },
     antidiagonal_mask: BitSet { bits:0 }, 

@@ -180,10 +180,10 @@ impl MovesIterator {
 }
 
 #[inline]
-fn is_legal_move(pos: &Position, move: &Move) -> bool {
+fn is_legal_move(pos: &Position, mv: &Move) -> bool {
     let mut new_pos = *pos;
-    new_pos.apply_move(move);
-    let test_area = match (*move, pos.next_to_move) {
+    new_pos.apply_move(mv);
+    let test_area = match (*mv, pos.next_to_move) {
         (CastleQueenSide, White) => BitSet::new(0b00011100u64),
         (CastleKingSide,  White) => BitSet::new(0b01110000u64),
         (CastleQueenSide, Black) => BitSet::new(0b00011100u64) << 7 * 8,
@@ -410,7 +410,7 @@ fn assert_moves(fen:&str, from:Square, expected_moves:&[Move]) {
     let pos = parse_fen(fen).unwrap();
     let it = MovesIterator::new(&pos);
     let generated_moves = from_square(from, it);
-    let mut expected_moves = Vec::from_slice(expected_moves);
+    let mut expected_moves = expected_moves.to_vec();
     expected_moves.sort();
     assert_eq!(generated_moves, expected_moves);    
 }
@@ -425,7 +425,7 @@ fn assert_castles(fen:&str, expected_moves:&[Move]) {
         }
     }).collect();
     generated_moves.sort();
-    let mut expected_moves = Vec::from_slice(expected_moves);
+    let mut expected_moves = expected_moves.to_vec();
     expected_moves.sort();
     assert_eq!(generated_moves, expected_moves);    
 }

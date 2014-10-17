@@ -10,6 +10,7 @@ pub mod utils;
 pub mod tables;
 pub mod uci;
 #[allow(dead_code)]
+#[allow(non_uppercase_statics)]
 pub mod squares;
 #[cfg(test)]
 mod perft_tests;

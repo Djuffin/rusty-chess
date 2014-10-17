@@ -8,9 +8,9 @@ fn perft(p: &Position, depth:uint) -> u64 {
         iter.count() as u64
     } else {
         let mut result = 0;
-        for move in iter {
+        for mv in iter {
             let mut p1 = *p;
-            p1.apply_move(&move);
+            p1.apply_move(&mv);
             result += perft(&p1, depth - 1);
         }
         result

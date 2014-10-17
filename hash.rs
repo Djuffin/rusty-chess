@@ -126,9 +126,9 @@ fn perft(p: &Position, depth:uint, positions: &mut Vec<String>){
     let hash = calc_position_hash(p);
     positions.push(format!("{:016x} - {}", hash, render_fen(p)));
     if depth > 0 { 
-        for move in p.gen_moves() {
+        for mv in p.gen_moves() {
             let mut p1 = *p;
-            p1.apply_move(&move);
+            p1.apply_move(&mv);
             //these 2 fields are not part of hash
             p1.half_moves_since_action = 0;
             p1.full_moves = 1;

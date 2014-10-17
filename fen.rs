@@ -11,37 +11,37 @@ pub fn render_fen(p:&Position) -> String {
     let mut result =  String::with_capacity(90);
     for i in range_step(7i, -1, -1) {
         render_rank(&p.board, i as u8, &mut result);
-        if i > 0 { result.push_char('/'); }
+        if i > 0 { result.push('/'); }
     }
 
     //next to move
-    result.push_char(' ');
-    result.push_char(match p.next_to_move {
+    result.push(' ');
+    result.push(match p.next_to_move {
         White => 'w', Black => 'b'
     });
 
     //castling rights
-    result.push_char(' ');
+    result.push(' ');
     if p.white_castling == NoCastling && p.black_castling == NoCastling {
-        result.push_char('-');
+        result.push('-');
     } else {
         render_castling(White, p.white_castling, &mut result);
         render_castling(Black, p.black_castling, &mut result);
     }
 
     //en passant square
-    result.push_char(' ');
+    result.push(' ');
     match p.en_passant {
         Some(s) => result.push_str(s.to_string().as_slice()),
-        None => result.push_char('-')
+        None => result.push('-')
     };
 
     //halfmove clock
-    result.push_char(' ');
+    result.push(' ');
     result.push_str(p.half_moves_since_action.to_string().as_slice());
 
     //fullmove number
-    result.push_char(' ');
+    result.push(' ');
     result.push_str(p.full_moves.to_string().as_slice());
 
     result
@@ -122,7 +122,7 @@ fn parse_int(iter: &mut Chars) -> Result<u16 , String> {
     let mut result = 0u16;
     loop {
         match iter.next() {
-            Some(c@'0'..'9') => {
+            Some(c@'0'...'9') => {
                 result *= 10;
                 result += ((c as u32) - ('0' as u32)) as u16;
             }
@@ -136,7 +136,7 @@ fn parse_int(iter: &mut Chars) -> Result<u16 , String> {
 
 fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
     let file = match iter.next() {
-        Some(c@'a'..'h') => (c as u32) - ('a' as u32),
+        Some(c@'a'...'h') => (c as u32) - ('a' as u32),
         Some('-') => return Ok(None),
         c => return Err(format!("Unexpected en passant value: {0}", c))
     };

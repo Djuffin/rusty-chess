@@ -21,7 +21,7 @@ struct Window {
 }
 
 struct Line {
-    move: Move,
+    mv: Move, //move, unfortunately 'move' is a keyword in rust
     score: Score,
     children: Vec<Line>
 }
@@ -46,7 +46,7 @@ impl Search {
         Search {
             position: *pos,
             top_line: Line {
-                move:NullMove,
+                mv:NullMove,
                 score: 0,
                 children: Vec::with_capacity(0),
             },
@@ -57,7 +57,7 @@ impl Search {
     pub fn top_moves(&self, n:uint) -> Vec<Move> {
         let mut result:Vec<Move> = Vec::with_capacity(n);
         for i in range(0, min(n, self.top_line.children.len())) {
-            result.push(self.top_line.children[i].move);
+            result.push(self.top_line.children[i].mv);
         }
         result
     }
@@ -75,9 +75,9 @@ fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, 
         let mut moves = pos.gen_moves();
         let (size, _) = moves.size_hint();
         line.children.reserve(size);
-        for move in moves {
+        for mv in moves {
             line.children.push(Line {
-                move: move,
+                mv: mv,
                 score: very_bad_score,
                 children: Vec::with_capacity(0)
             });   
@@ -96,7 +96,7 @@ fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, 
     let mut window = Window { alpha: win.alpha, beta:win.beta };
     for child in line.children.iter_mut() {
         let mut new_pos = *pos;
-        new_pos.apply_move(&child.move);   
+        new_pos.apply_move(&child.mv);   
         let hash = ::hash::calc_position_hash(&new_pos);
         
         //let pi = search_engine.search_cache.find(&hash);

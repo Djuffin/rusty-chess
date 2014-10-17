@@ -352,10 +352,10 @@ impl Position {
         ::move_gen::is_under_attack(&self.board, self.next_to_move.inverse(), test_area)
     }
 
-    pub fn apply_move(&mut self, move:&Move) -> Option<Piece> {
+    pub fn apply_move(&mut self, mv:&Move) -> Option<Piece> {
         use squares::*;
         let color = self.next_to_move;
-        match *move {
+        match *mv { 
             OrdinalMove (ref mi) => {
                 let mut captured_piece = self.board.get_piece(mi.to);
                 debug_assert!(self.board.get_piece(mi.from).expect("src sq is empty").kind() 
