@@ -1,5 +1,4 @@
 use types::{Square};
- #[allow(non_uppercase_statics)]
 pub static a1:Square = Square(0 * 8 + 0);
 pub static a2:Square = Square(1 * 8 + 0);
 pub static a3:Square = Square(2 * 8 + 0);

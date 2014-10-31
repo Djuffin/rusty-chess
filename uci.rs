@@ -173,7 +173,7 @@ fn move_to_uci(mv: &Move, color: Color) -> UciMove {
                 }
             }
         }
-        NullMove => fail!("null move is not supposed to get out to uci")
+        NullMove => panic!("null move is not supposed to get out to uci")
     }
 }
 
@@ -184,7 +184,7 @@ fn uci_to_move(board: &Board, mv: &UciMove) -> Move {
         Some(p) => p,
         None => {
             //TODO: report error
-            fail!("Uci move from an empty square");
+            panic!("Uci move from an empty square");
         }
     };
 
@@ -359,7 +359,7 @@ fn parse_position_command_test() {
     let cmd = parse_command("position startpos\n").unwrap();
     let (pos, moves) = match cmd {
         CmdPosition(pos, moves) => (pos, moves),
-        _ => fail!("wrong command")
+        _ => panic!("wrong command")
     };
     assert_eq!(pos, startpos);
     assert_eq!(moves.len(), 0);
@@ -367,7 +367,7 @@ fn parse_position_command_test() {
     let cmd = parse_command("position startpos moves e2e4 e7e5 a7a8r\n").unwrap();
     let (pos, moves) = match cmd {
         CmdPosition(pos, moves) => (pos, moves),
-        _ => fail!("wrong command")
+        _ => panic!("wrong command")
     };
     assert_eq!(pos, startpos);
     assert_eq!(moves[0], UciMove { from:e2, to:e4, promotion:None});
@@ -377,7 +377,7 @@ fn parse_position_command_test() {
     let cmd = parse_command("position fen r1b1k1nr/ppp2ppp/2n5/2b1q3/3p4/P1P2pPN/1P5P/RNBQKB1R w KQkq - 0 10\n").unwrap();
     let (pos, moves) = match cmd {
         CmdPosition(pos, moves) => (pos, moves),
-        _ => fail!("wrong command")
+        _ => panic!("wrong command")
     };
     assert_eq!(pos, parse_fen("r1b1k1nr/ppp2ppp/2n5/2b1q3/3p4/P1P2pPN/1P5P/RNBQKB1R w KQkq - 0 10").unwrap());
     assert_eq!(moves.len(), 0);

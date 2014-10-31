@@ -29,7 +29,7 @@ fn assert_perft(fen:&str, expected_results:&[u64], depth:uint) {
     let result = perft(&pos, depth);
     let expected_result = expected_results[depth - 1]; 
     if result != expected_result {
-        fail!("Incorrect perft result for fen:'{0}', depth:{1}, actual result:{2}, expected result:{3}",
+        panic!("Incorrect perft result for fen:'{0}', depth:{1}, actual result:{2}, expected result:{3}",
             fen, depth, result, expected_result)
     }
 }

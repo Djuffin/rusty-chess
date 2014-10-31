@@ -276,7 +276,7 @@ fn parse_render_fens() {
     for &fen in test_fens.iter() {
         let position = match parse_fen(fen) {
             Ok(p) => p,
-            Err(err) => fail!(format!("Failed to parse fen '{0}' with error '{1}'", fen, err))
+            Err(err) => panic!(format!("Failed to parse fen '{0}' with error '{1}'", fen, err))
         };
         let fen2 = render_fen(&position);
         assert_eq!(fen, fen2.as_slice());

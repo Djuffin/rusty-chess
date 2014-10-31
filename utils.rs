@@ -25,7 +25,7 @@ pub fn write_to_log(line: String) {
     let p = Path::new("rchess.log");
     let mut file = match File::open_mode(&p, Append, ReadWrite) {
         Ok(f) => f,
-        Err(e) => fail!("file error: {}", e),
+        Err(e) => panic!("file error: {}", e),
     };
     let _ = writeln!(&mut file, "{}", line);
 }
