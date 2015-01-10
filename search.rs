@@ -15,6 +15,7 @@ struct Search {
     top_line: Line
 }
 
+#[derive(Copy)]
 struct Window {
     alpha: Score, //min score that whites can already count on
     beta: Score   //max score that blacks can already count on
@@ -26,6 +27,7 @@ struct Line {
     children: Vec<Line>
 }
 
+#[derive(Copy)]
 struct PositionInfo {
     depth: uint,
     score: Score,

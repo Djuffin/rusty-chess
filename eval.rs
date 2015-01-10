@@ -1,7 +1,8 @@
 //Position evaluation
 use types::*;
+pub use self::GameStage::*;
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show, Copy)]
 pub enum GameStage {
     Opening, Middlegame, Endgame
 }
@@ -20,34 +21,35 @@ pub trait Evaluator {
 
 
 //very simple position evaluation based mostly on https://chessprogramming.wikispaces.com/Simplified+evaluation+function
+#[derive(Copy)]
 pub struct SimpleEvaluator {
     //arrays that eastimate relative value of each a piece in each square
-    white_pawn_weights : [i8, ..64],
-    black_pawn_weights : [i8, ..64],
+    white_pawn_weights : [i8; 64],
+    black_pawn_weights : [i8; 64],
 
-    white_knight_weights : [i8, ..64],
-    black_knight_weights : [i8, ..64],
+    white_knight_weights : [i8; 64],
+    black_knight_weights : [i8; 64],
 
-    white_bishop_weights : [i8, ..64],
-    black_bishop_weights : [i8, ..64],
+    white_bishop_weights : [i8; 64],
+    black_bishop_weights : [i8; 64],
 
-    white_rook_weights : [i8, ..64],
-    black_rook_weights : [i8, ..64],
+    white_rook_weights : [i8; 64],
+    black_rook_weights : [i8; 64],
 
-    white_queen_weights : [i8, ..64],
-    black_queen_weights : [i8, ..64],
+    white_queen_weights : [i8; 64],
+    black_queen_weights : [i8; 64],
 
-    white_king_weights : [i8, ..64],
-    black_king_weights : [i8, ..64],
+    white_king_weights : [i8; 64],
+    black_king_weights : [i8; 64],
 
-    white_endgame_king_weights : [i8, ..64],
-    black_endgame_king_weights : [i8, ..64]
+    white_endgame_king_weights : [i8; 64],
+    black_endgame_king_weights : [i8; 64]
 
 }
 
 impl SimpleEvaluator {
     pub fn new() -> SimpleEvaluator {
-        let white_pawn_weights : [i8, ..64] = mirror_weights_table(
+        let white_pawn_weights : [i8; 64] = mirror_weights_table(
           &[0,  0,  0,  0,  0,  0,  0,  0,
             50, 50, 50, 50, 50, 50, 50, 50,
             10, 10, 20, 30, 30, 20, 10, 10,
@@ -57,7 +59,7 @@ impl SimpleEvaluator {
              5, 10, 10,-20,-20, 10, 10,  5,
              0,  0,  0,  0,  0,  0,  0,  0]);
 
-        let white_knight_weights : [i8, ..64] = mirror_weights_table(
+        let white_knight_weights : [i8; 64] = mirror_weights_table(
           &[-50,-40,-30,-30,-30,-30,-40,-50,
             -40,-20,  0,  0,  0,  0,-20,-40,
             -30,  0, 10, 15, 15, 10,  0,-30,
@@ -67,7 +69,7 @@ impl SimpleEvaluator {
             -40,-20,  0,  5,  5,  0,-20,-40,
             -50,-40,-30,-30,-30,-30,-40,-50]);
 
-        let white_bishop_weights : [i8, ..64] = mirror_weights_table(
+        let white_bishop_weights : [i8; 64] = mirror_weights_table(
           &[-20,-10,-10,-10,-10,-10,-10,-20,
             -10,  0,  0,  0,  0,  0,  0,-10,
             -10,  0,  5, 10, 10,  5,  0,-10,
@@ -77,7 +79,7 @@ impl SimpleEvaluator {
             -10,  5,  0,  0,  0,  0,  5,-10,
             -20,-10,-10,-10,-10,-10,-10,-20]);
 
-        let white_rook_weights : [i8, ..64] = mirror_weights_table(
+        let white_rook_weights : [i8; 64] = mirror_weights_table(
            &[0,  0,  0,  0,  0,  0,  0,  0,
              5, 10, 10, 10, 10, 10, 10,  5,
             -5,  0,  0,  0,  0,  0,  0, -5,
@@ -87,7 +89,7 @@ impl SimpleEvaluator {
             -5,  0,  0,  0,  0,  0,  0, -5,
              0,  0,  0,  5,  5,  0,  0,  0]);
 
-        let white_queen_weights : [i8, ..64] = mirror_weights_table(
+        let white_queen_weights : [i8; 64] = mirror_weights_table(
           &[-20,-10,-10, -5, -5,-10,-10,-20,
             -10,  0,  0,  0,  0,  0,  0,-10,
             -10,  0,  5,  5,  5,  5,  0,-10,
@@ -97,7 +99,7 @@ impl SimpleEvaluator {
             -10,  0,  5,  0,  0,  0,  0,-10,
             -20,-10,-10, -5, -5,-10,-10,-20]);
 
-        let white_king_weights : [i8, ..64] = mirror_weights_table(
+        let white_king_weights : [i8; 64] = mirror_weights_table(
           &[-30,-40,-40,-50,-50,-40,-40,-30,
             -30,-40,-40,-50,-50,-40,-40,-30,
             -30,-40,-40,-50,-50,-40,-40,-30,
@@ -107,7 +109,7 @@ impl SimpleEvaluator {
              20, 20,  0,  0,  0,  0, 20, 20,
              20, 30, 10,  0,  0, 10, 30, 20]);
 
-        let white_endgame_king_weights : [i8, ..64] = mirror_weights_table(
+        let white_endgame_king_weights : [i8; 64] = mirror_weights_table(
           &[-50,-40,-30,-20,-20,-30,-40,-50,
             -30,-20,-10,  0,  0,-10,-20,-30,
             -30,-10, 20, 30, 30, 20,-10,-30,
@@ -236,8 +238,8 @@ impl Evaluator for SimpleEvaluator {
 }
 
 
-fn mirror_weights_table(table: &[i8, ..64]) -> [i8, ..64] {
-    let mut result = [0i8, ..64]; 
+fn mirror_weights_table(table: &[i8; 64]) -> [i8; 64] {
+    let mut result = [0i8; 64]; 
     for rank in range(0, 8) {
         for file in range(0, 8) {
             let input_sq = Square::new(file, rank);
@@ -268,12 +270,12 @@ fn simple_eval_test() {
     //------------------
     // 2135
     let score = evaluator.eval(&position);
-    assert_eq!(score, 2135)
+    assert_eq!(score, 2135);
 
     //initial position
     let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap(); 
     let score = evaluator.eval(&position);
-    assert_eq!(score, 0)
+    assert_eq!(score, 0);
 
     //middle game position
     let position = parse_fen("qk5r/8/8/3K4/8/8/8/R6Q w - - 0 40").unwrap(); 
@@ -285,7 +287,7 @@ fn simple_eval_test() {
     //black king in b8 = 30
     //result = -50 - 30 = -80
     //rooks and queens nullify each other
-    assert_eq!(score, -80) 
+    assert_eq!(score, -80); 
 
     //endgame position
     let position = parse_fen("k7/8/8/3K4/8/8/8/8 w - - 0 40").unwrap(); 
@@ -296,7 +298,7 @@ fn simple_eval_test() {
     //white king in the center = 40
     //black king in the corner = -50
     //result = 40 - (-50) = 90
-    assert_eq!(score, 90) 
+    assert_eq!(score, 90);
 }
 
 #[test]

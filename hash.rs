@@ -24,8 +24,8 @@ pub fn calc_position_hash(position: &Position) -> u64 {
 fn piece_hash(sq:Square, piece:Piece) -> u64 {
     //this function returns a random number for each (square, piece) combination
     //it returns first (2 * 6 * 64) 768 random numbers from #0 to #767   
-    let index = (piece.kind() as uint << 7) + 
-                (piece.color() as uint << 6) + 
+    let index = ((piece.kind() as uint) << 7) + 
+                ((piece.color() as uint) << 6) + 
                 (sq.file_and_rank() as uint);
     get_random_number(index)
 }
@@ -34,7 +34,7 @@ fn piece_hash(sq:Square, piece:Piece) -> u64 {
 fn castling_hash(white:CastlingRight, black:CastlingRight) -> u64 {
     //this function returns random number for each possible black/white castling right combination
     //it returns 16 random numbers from #800 to #816
-    let index = (white as uint) + (black as uint << 2);
+    let index = (white as uint) + ((black as uint) << 2);
     get_random_number(index + 800)
 }
 
@@ -65,7 +65,6 @@ mod tests {
 use hash::*;
 use fen::{parse_fen, render_fen};
 use types::*;
-use std::str::{StrSlice};
 
 #[test]
 fn one_piece_positions() {

@@ -2,26 +2,30 @@
 //http://wbec-ridderkerk.nl/html/UCIProtocol.html
 use types::*;
 use fen::parse_fen;
-use std::str::{Chars, StrSlice};
+use std::str::Chars;
 use std::fmt;
+use std::str::FromStr;
 use search::search;
+pub use self::SearchOption::*;
+pub use self::Command::*;
+pub use self::Response::*;
 
 
-#[deriving(PartialEq)]
+#[derive(PartialEq, Show, Copy)]
 pub struct UciMove {
     from:Square,
     to:Square,
     promotion:Option<Kind>
 }
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show, Copy)]
 pub enum SearchOption {
     MovetimeMsc(uint),
     Depth(uint),
     Infinity
 }
 
-#[deriving(PartialEq, Show)]
+#[derive(PartialEq, Show)]
 pub enum Command {
     CmdUci,
     CmdIsReady,
@@ -33,7 +37,7 @@ pub enum Command {
     CmdUnknown
 }
 
-#[deriving(PartialEq)]
+#[derive(PartialEq, Show)]
 pub enum Response {
     RspId (String, String),
     RspUciOk,
@@ -42,11 +46,12 @@ pub enum Response {
     RspInfo (String),
 }
 
+#[derive(Copy, Show)]
 pub struct UciEngine {
     position: Position
 }
 
-impl fmt::Show for UciMove {
+impl fmt::String for UciMove {
     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match self.promotion {
             Some(promo) => 
@@ -57,7 +62,7 @@ impl fmt::Show for UciMove {
     }
 }
 
-impl fmt::Show for Response {
+impl fmt::String for Response {
     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
             RspId(ref name, ref value) => write!(f, "id {} {}", name, value),
@@ -79,7 +84,7 @@ impl UciEngine {
 
     pub fn main_loop(&mut self) {
         use std::io;
-        for line in io::stdin().lines() {
+        for line in io::stdin().lock().lines() {
             let line = line.unwrap();
             let cmd = match parse_command(line.as_slice()) {
                 Ok(cmd) => cmd,
@@ -274,14 +279,14 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
 fn pares_search_option(input: &str) -> Result<SearchOption, String> {
     if input.starts_with("movetime") {
         let num_str = skip_spaces(input.slice_from("movetime".len()));
-        let time:uint = match from_str(num_str) {
+        let time:uint = match FromStr::from_str(num_str) {
             Some(t) => t,
             None => { return Err("Movetime is invalid or not provided".to_string()); }
         };
         return Ok (MovetimeMsc(time));
     } else if input.starts_with("depth") {
         let num_str = skip_spaces(input.slice_from("depth".len()));
-        let depth:uint = match from_str(num_str) {
+        let depth:uint = match FromStr::from_str(num_str) {
             Some(t) => t,
             None => { return Err("Depth is invalid or not provided".to_string()); }
         };
@@ -292,7 +297,7 @@ fn pares_search_option(input: &str) -> Result<SearchOption, String> {
 }
 
 fn skip_spaces<'a>(s: &'a str) ->&'a str {
-    let index = s.find(|c: char| !c.is_whitespace());
+    let index = s.find(|&: c: char| !c.is_whitespace());
     match index {
         Some(i) => s.slice_from(i),
         None => s.slice_from(s.len())
@@ -329,11 +334,11 @@ fn parse_move(input: &str) -> Result<UciMove, String> {
 fn parse_square(iter: &mut Chars) -> Result<Square, String> {
     let file = match iter.next() {
         Some(c@'a'...'h') => (c as u32) - ('a' as u32),
-        c => return Err(format!("Unexpected move file: {0}", c))
+        c => return Err(format!("Unexpected move file: {0:?}", c))
     };
     let rank = match iter.next() {
         Some(c@'1'...'8') => (c as u32) - ('1' as u32),
-        c => return Err(format!("Unexpected move rank: {0}", c))
+        c => return Err(format!("Unexpected move rank: {0:?}", c))
     };
     Ok(Square::new(file as u8, rank as u8)) 
 }

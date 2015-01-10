@@ -1,12 +1,15 @@
 use std::fmt;
 use std::iter::range_step;
+use std::num::Int;
 use types::Square;
+use std::ops::{BitAnd, BitOr, BitXor, Not, Add, Sub, Shl, Shr};
 
-#[deriving(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy)]
 pub struct BitSet {
     pub bits:u64
 }
 
+#[derive(Copy)]
 pub struct SquareIter {
     bits:u64
 }
@@ -69,7 +72,9 @@ impl BitSet {
 
 }
 
-impl Iterator<Square> for SquareIter {
+impl Iterator for SquareIter {
+    type Item = Square;
+
     #[inline]
     fn next(&mut self) -> Option<Square> {
         if self.bits == 0 {
@@ -96,60 +101,76 @@ impl SquareIter {
   
 }
 
-impl BitAnd<BitSet, BitSet> for BitSet {
+impl BitAnd for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn bitand(&self, rhs: &BitSet) -> BitSet {
+    fn bitand(self, rhs: BitSet) -> BitSet {
         BitSet { bits : self.bits & rhs.bits }
     }
 }
 
-impl Add<BitSet, BitSet> for BitSet {
+impl Add for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn add(&self, rhs: &BitSet) -> BitSet {
+    fn add(self, rhs: BitSet) -> BitSet {
         BitSet { bits : self.bits + rhs.bits }
     }
 }
 
-impl Sub<BitSet, BitSet> for BitSet {
+impl Sub for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn sub(&self, rhs: &BitSet) -> BitSet {
+    fn sub(self, rhs: BitSet) -> BitSet {
         BitSet { bits : self.bits - rhs.bits }
     }
 }
 
-impl BitOr<BitSet, BitSet> for BitSet {
+impl BitOr for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn bitor(&self, rhs: &BitSet) -> BitSet {
+    fn bitor(self, rhs: BitSet) -> BitSet {
         BitSet { bits : self.bits | rhs.bits }
     }
 }
 
-impl BitXor<BitSet, BitSet> for BitSet {
+impl BitXor for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn bitxor(&self, rhs: &BitSet) -> BitSet {
+    fn bitxor(self, rhs: BitSet) -> BitSet {
         BitSet { bits : self.bits ^ rhs.bits }
     }
 }
 
-impl Not<BitSet> for BitSet {
+impl Not for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn not(&self) -> BitSet {
+    fn not(self) -> BitSet {
         BitSet { bits : !self.bits }
     }
 }
 
-impl Shl<uint, BitSet> for BitSet {
+impl Shl<usize> for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn shl(&self, rhs: &uint) -> BitSet {
-        BitSet { bits: self.bits << *rhs }
+    fn shl(self, rhs: usize) -> BitSet {
+        BitSet { bits: self.bits << rhs }
     }
 }
 
 
-impl Shr<uint, BitSet> for BitSet {
+impl Shr<usize> for BitSet {
+    type Output = BitSet;
+
     #[inline]
-    fn shr(&self, rhs: &uint) -> BitSet {
-        BitSet { bits: self.bits >> *rhs }
+    fn shr(self, rhs: usize) -> BitSet {
+        BitSet { bits: self.bits >> rhs }
     }
 }
 
@@ -167,9 +188,14 @@ impl fmt::Show for BitSet {
      }
 }
 
-impl fmt::Show for SquareIter {
+impl fmt::String for SquareIter {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        let list:Vec<Square> = FromIterator::from_iter(*self);
-        write!(f, "{0}", list)
+        try!(write!(f, "["));
+        let mut cp = *self;
+        for sq in cp {
+            try!(write!(f, "{0} ", sq));    
+        }
+        try!(write!(f, "]"));
+        Ok (())
      }
 }

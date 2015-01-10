@@ -1,25 +1,30 @@
 #![crate_name = "rchess"]
 #![crate_type = "bin"]
-#![feature(globs)]
+#![feature(int_uint)] 
+#![allow(unstable)]
+#![feature(box_syntax)]
 
-pub mod types;
-pub mod bitset;
-pub mod fen;
-pub mod move_gen;
-pub mod utils;
-pub mod tables;
-pub mod uci;
 #[allow(dead_code)]
-#[allow(non_uppercase_statics)]
-pub mod squares;
-#[cfg(test)]
-mod perft_tests;
+#[allow(non_upper_case_globals)]
+mod squares;
+
+mod bitset;
+mod types;
+mod fen;
+mod move_gen;
+mod utils;
+mod tables;
 mod eval;
 mod search;
 mod hash;
+pub mod uci;
+#[cfg(test)]
+mod perft_tests;
 
 
-pub fn main() {
-    tables::init_tables();
-    uci::UciEngine::new().main_loop();
+
+
+fn main() {
+  tables::init_tables();
+  uci::UciEngine::new().main_loop();
 }

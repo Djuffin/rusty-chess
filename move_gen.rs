@@ -10,7 +10,9 @@ pub struct LegalMovesIterator {
     moves_iter: MovesIterator
 }
 
-impl Iterator<Move> for LegalMovesIterator {
+impl Iterator for LegalMovesIterator {
+    type Item = Move;
+
     fn next(&mut self) -> Option<Move> {
         loop {
             let next_move = self.moves_iter.next();
@@ -43,7 +45,9 @@ pub struct MovesIterator {
     can_gen_more: bool
 }
 
-impl Iterator<Move> for MovesIterator {
+impl Iterator for MovesIterator {
+    type Item = Move;
+
     fn next(&mut self) -> Option<Move> {
         while self.moves_cache.is_empty() {
             if !self.can_gen_more {
@@ -389,7 +393,7 @@ use move_gen::MovesIterator;
 use squares::*;
 
 fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
-    let mut result:Vec<Move> = it.filter_map(|m| {
+    let mut result:Vec<Move> = it.filter_map(|&:m| {
         match m {
             OrdinalMove(mi) if mi.from == sq => Some(m), 
             _ => None
@@ -400,7 +404,7 @@ fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
 }
 
 fn prepare_moves(kind: Kind, from:Square, squares:&[Square]) -> Vec<Move> {
-    let mut it = squares.iter().map(|to_sq| Move::new(kind, from, *to_sq, None));
+    let mut it = squares.iter().map(|&:to_sq| Move::new(kind, from, *to_sq, None));
     let mut result:Vec<Move> = it.collect();
     result.sort();
     result
@@ -443,45 +447,45 @@ fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
 fn rook_moves_test() {
     ::tables::init_tables();
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1"; 
-    assert_squares(fen, a1, [a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
-    assert_squares(fen, d5, [a5, b5, c5, d4, d6, d7, d8]);
-    assert_squares(fen, e5, [f5, g5, h5, e6, e7, e8, e4]);
-    assert_squares(fen, h1, [b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
+    assert_squares(fen, a1, &[a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
+    assert_squares(fen, d5, &[a5, b5, c5, d4, d6, d7, d8]);
+    assert_squares(fen, e5, &[f5, g5, h5, e6, e7, e8, e4]);
+    assert_squares(fen, h1, &[b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
 
     //same but white to move
     let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r w - - 0 1"; 
-    assert_squares(fen, a8, [a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
-    assert_squares(fen, d4, [a4, b4, c4, d5, d3, d2, d1]);
-    assert_squares(fen, e4, [f4, g4, h4, e5, e3, e2, e1]);
-    assert_squares(fen, h8, [b8, c8, d8, e8, f8, g8, h1, h2, h3, h4, h5, h6, h7]);
+    assert_squares(fen, a8, &[a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
+    assert_squares(fen, d4, &[a4, b4, c4, d5, d3, d2, d1]);
+    assert_squares(fen, e4, &[f4, g4, h4, e5, e3, e2, e1]);
+    assert_squares(fen, h8, &[b8, c8, d8, e8, f8, g8, h1, h2, h3, h4, h5, h6, h7]);
 }
 
 #[test]
 fn bishop_moves_test() {
     ::tables::init_tables();
     let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B w - - 0 1"; 
-    assert_squares(fen, d4, [c3, e5, f6, g7, h8, a7, b6, c5, e3, f2]);
-    assert_squares(fen, h1, [a8, b7, c6, d5, e4, f3, g2]);
+    assert_squares(fen, d4, &[c3, e5, f6, g7, h8, a7, b6, c5, e3, f2]);
+    assert_squares(fen, h1, &[a8, b7, c6, d5, e4, f3, g2]);
 
     let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B b - - 0 1";
-    assert_squares(fen, a8, [b7, c6, d5, e4, f3, g2, h1]);
-    assert_squares(fen, c4, [a6, b5, d3, e2, b3, d5, e6, f7, g8]);
+    assert_squares(fen, a8, &[b7, c6, d5, e4, f3, g2, h1]);
+    assert_squares(fen, c4, &[a6, b5, d3, e2, b3, d5, e6, f7, g8]);
 }
 
 #[test]
 fn queen_moves_test() {
     ::tables::init_tables();
     let fen = "Q7/8/5q2/8/8/2Q5/8/8 w - - 0 1"; 
-    assert_squares(fen, a8, [a1, a2, a3, a4, a5, a6, a7, 
+    assert_squares(fen, a8, &[a1, a2, a3, a4, a5, a6, a7, 
                              b8, c8, d8, e8, f8, g8, h8,
                              b7, c6, d5, e4, f3, g2, h1]);
-    assert_squares(fen, c3, [a3, b3, d3, e3, f3, g3, h3,
+    assert_squares(fen, c3, &[a3, b3, d3, e3, f3, g3, h3,
                              c1, c2, c4, c5, c6, c7, c8,
                              a1, b2, d4, e5, f6,
                              a5, b4, d2, e1]);
 
     let fen = "Q7/8/5q2/8/8/2Q5/8/8 b - - 0 1";
-    assert_squares(fen, f6, [a6, b6, c6, d6, e6, g6, h6,
+    assert_squares(fen, f6, &[a6, b6, c6, d6, e6, g6, h6,
                              f1, f2, f3, f4, f5, f7, f8,
                              c3, d4, e5, g7, h8,
                              d8, e7, g5, h4]);
@@ -491,25 +495,25 @@ fn queen_moves_test() {
 fn knight_moves_test() {
     ::tables::init_tables();
     let fen = "N7/8/7p/4n3/6n1/8/5p2/8 w - - 0 1";
-    assert_squares(fen, a8, [b6, c7]);  
+    assert_squares(fen, a8, &[b6, c7]);  
 
     let fen = "N7/8/7p/4n3/6n1/8/5p2/8 b - - 0 1";
-    assert_squares(fen, e5, [c6, d7, c4, d3, f3, f7, g6]);
-    assert_squares(fen, g4, [h2, e3, f6]);
+    assert_squares(fen, e5, &[c6, d7, c4, d3, f3, f7, g6]);
+    assert_squares(fen, g4, &[h2, e3, f6]);
 }
 
 #[test]
 fn king_moves_test() {
     ::tables::init_tables();
     let fen = "rn2k2r/8/8/2K2k2/8/8/8/R3K1NR w KQkq - 0 1";
-    assert_squares(fen, c5, [c4, c6, b5, d5, d4, d6, b4, b6]);
-    assert_squares(fen, e1, [d1, d2, e2, f2, f1]);
-    assert_castles(fen, [CastleQueenSide]);
+    assert_squares(fen, c5, &[c4, c6, b5, d5, d4, d6, b4, b6]);
+    assert_squares(fen, e1, &[d1, d2, e2, f2, f1]);
+    assert_castles(fen, &[CastleQueenSide]);
 
     let fen = "rn2k2r/8/8/2K2k2/8/8/8/R3K1NR b KQkq - 0 1";
-    assert_squares(fen, f5, [f4, f6, e4, e5, e6, g4, g5, g6]);
-    assert_squares(fen, e8, [d8, d7, e7, f7, f8]);
-    assert_castles(fen, [CastleKingSide]);
+    assert_squares(fen, f5, &[f4, f6, e4, e5, e6, g4, g5, g6]);
+    assert_squares(fen, e8, &[d8, d7, e7, f7, f8]);
+    assert_castles(fen, &[CastleKingSide]);
 }
 
 #[test]
@@ -517,10 +521,10 @@ fn pawn_moves_test() {
     ::tables::init_tables();
     let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 w - - 0 1";
 
-    assert_squares(fen, a2, [a3, a4]);    
-    assert_squares(fen, b4, [b5]);
-    assert_squares(fen, g3, [g4]);
-    assert_moves(fen, d7, [
+    assert_squares(fen, a2, &[a3, a4]);    
+    assert_squares(fen, b4, &[b5]);
+    assert_squares(fen, g3, &[g4]);
+    assert_moves(fen, d7, &[
         Move::new(Pawn, d7, d8, Some(Queen)),
         Move::new(Pawn, d7, d8, Some(Rook)),
         Move::new(Pawn, d7, d8, Some(Bishop)),
@@ -533,10 +537,10 @@ fn pawn_moves_test() {
 
     let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 b - b3 0 1";    
 
-    assert_squares(fen, c4, [b3]);
-    assert_squares(fen, e5, []);
-    assert_squares(fen, e4, [e3]);
-    assert_squares(fen, g7, [f6, h6, g6, g5]);
+    assert_squares(fen, c4, &[b3]);
+    assert_squares(fen, e5, &[]);
+    assert_squares(fen, e4, &[e3]);
+    assert_squares(fen, g7, &[f6, h6, g6, g5]);
 }
 
 } 

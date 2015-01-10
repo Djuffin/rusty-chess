@@ -1,14 +1,18 @@
 use std::fmt;
 use std::iter::range_step;
 use bitset::{BitSet, SquareIter};
+pub use self::Color::*;
+pub use self::Kind::*;
+pub use self::CastlingRight::*;
+pub use self::Move::*;
 
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
 pub enum Kind {
     Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
 pub enum Color {
     White = 0, Black = 1
 }
@@ -23,7 +27,7 @@ impl Color {
     }
 }
 
-impl fmt::Show for Kind {
+impl fmt::String for Kind {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
             Pawn   => "p",
@@ -37,7 +41,7 @@ impl fmt::Show for Kind {
      }
 }
 
-impl fmt::Show for Color {
+impl fmt::String for Color {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
             White => write!(f, "w"),
@@ -46,7 +50,7 @@ impl fmt::Show for Color {
      }
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
 pub struct Piece (pub Kind, pub Color);
 
 impl Piece {
@@ -64,7 +68,7 @@ impl Piece {
 
 }
 
-impl fmt::Show for Piece {
+impl fmt::String for Piece {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
             Piece(Pawn,   White) => "P",
@@ -85,7 +89,7 @@ impl fmt::Show for Piece {
 }
 
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
 pub struct Square (pub u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
 
 impl Square {
@@ -115,7 +119,7 @@ impl Square {
 
 }
 
-impl fmt::Show for Square {
+impl fmt::String for Square {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         write!(f, "{0}{1}", 
             ('a' as u8 + self.file()) as char,
@@ -125,7 +129,7 @@ impl fmt::Show for Square {
 }
 
 
-#[deriving(PartialEq, Eq, Show)]
+#[derive(PartialEq, Eq, Copy, Clone, Show)]
 pub enum CastlingRight {
     NoCastling = 0, QueenCastling = 1, KingCastling = 2, BothCastling = 3
 }
@@ -149,7 +153,7 @@ impl CastlingRight {
     }
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
 pub struct OrdinalMoveInfo {
     pub from: Square,
     pub to : Square,
@@ -157,7 +161,7 @@ pub struct OrdinalMoveInfo {
     pub promotion : Option<Kind>
 }
 
-#[deriving(PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
 pub enum Move {
     OrdinalMove (OrdinalMoveInfo),
     CastleKingSide,
@@ -177,7 +181,7 @@ impl Move {
     }
 }
 
-impl fmt::Show for Move {
+impl fmt::String for Move {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
             CastleKingSide => write!(f, "O-O"),
@@ -199,7 +203,7 @@ impl fmt::Show for Move {
 
 
 
-#[deriving(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Copy, Show)]
 pub struct Board {
     pub whites:  BitSet,
     pub blacks:  BitSet,
@@ -308,9 +312,9 @@ impl Board {
 
 }
 
-impl fmt::Show for Board {
+impl fmt::String for Board {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        try!(writeln!(f, ""))
+        try!(writeln!(f, ""));
         for rank in range_step(7i, -1, -1) {
             for file in range(0i, 8) {
                 let sq = Square::new(file as u8, rank as u8);
@@ -327,7 +331,7 @@ impl fmt::Show for Board {
 }
 
 
-#[deriving(PartialEq, Eq, Show)]
+#[derive(PartialEq, Eq, Copy, Show)]
 pub struct Position {
     pub board : Board,
     pub full_moves : u16,
@@ -498,6 +502,13 @@ impl Position {
 mod tests {
 use fen::parse_fen;
 use types::*;
+use squares::*;
+
+fn assert_squares(mut expected_sq:Vec<Square>, mut actual_sq:Vec<Square>) {
+    expected_sq.sort();
+    actual_sq.sort();
+    assert_eq!(expected_sq, actual_sq);    
+}
 
 #[test]
 fn get_pieces_test() {
@@ -505,10 +516,10 @@ fn get_pieces_test() {
     let initial_position = parse_fen(initial_fen).unwrap();
 
     let white_pawns = initial_position.board.get_pieces(Pawn, White);
-    assert_eq!("[a2, b2, c2, d2, e2, f2, g2, h2]", white_pawns.to_string().as_slice());
+    assert_squares(vec![a2, b2, c2, d2, e2, f2, g2, h2], white_pawns.collect());
 
     let black_knights = initial_position.board.get_pieces(Knight, Black);
-    assert_eq!("[b8, g8]", black_knights.to_string().as_slice());
+    assert_squares(vec![b8, g8], black_knights.collect());
 
     for &color in [White, Black].iter() {
         for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {

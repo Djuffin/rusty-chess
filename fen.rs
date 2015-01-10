@@ -1,4 +1,4 @@
-use std::str::{Chars, StrSlice};
+use std::str::Chars;
 use std::string::String;
 use std::iter::range_step;
 use types::*;
@@ -90,7 +90,7 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     let next_to_move = match iter.next() {
         Some('w') => White,
         Some('b') => Black,
-        c => { return Err(format!("'b' or 'w' is expected for next to move instead of {0}", c)) }
+        c => { return Err(format!("'b' or 'w' is expected for next to move instead of {0:?}", c)) }
     };
     try!(expect_char(&mut iter, ' ', "Space is expected after next to move color".to_string()));
 
@@ -128,7 +128,7 @@ fn parse_int(iter: &mut Chars) -> Result<u16 , String> {
             }
             None => break,
             Some(c) if c.is_whitespace() => break,
-            c => return Err(format!("Expected integer move value instead of {0}", c))
+            c => return Err(format!("Expected integer move value instead of {0:?}", c))
         }
     }
     Ok (result)
@@ -138,12 +138,12 @@ fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
     let file = match iter.next() {
         Some(c@'a'...'h') => (c as u32) - ('a' as u32),
         Some('-') => return Ok(None),
-        c => return Err(format!("Unexpected en passant value: {0}", c))
+        c => return Err(format!("Unexpected en passant value: {0:?}", c))
     };
     let rank = match iter.next() {
         Some('3') => 2u8,
         Some('6') => 5u8,
-        c => return Err(format!("Unexpected en passant value: {0}", c))
+        c => return Err(format!("Unexpected en passant value: {0:?}", c))
     };
     Ok(Some(Square::new(file as u8, rank))) 
 }
@@ -164,14 +164,14 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
                     return Ok ((NoCastling, NoCastling)) 
                 }
             Some(' ') => break,
-            c => { return Err(format!("Unexpected castling configuration {0}", c)) } 
+            c => { return Err(format!("Unexpected castling configuration {0:?}", c)) } 
         };
         n += 1;
         if n > 4 {
             return Err("Castling configuration is too long".to_string());  
         }
     }
-    let bools_to_castling = |king:bool, queen:bool| {
+    let bools_to_castling = |&: king:bool, queen:bool| {
         match (king, queen) {
             (true, false)  => KingCastling,
             (false, true)  => QueenCastling,
