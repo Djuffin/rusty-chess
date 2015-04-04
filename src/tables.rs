@@ -2,7 +2,7 @@ use bitset::BitSet;
 use types::*;
 
 //data that helps generate move available for different pieces from each square
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct SquareMoveData {
     //This mask contains active bits in the same file as this square.
     //The square itself is 0.
@@ -72,27 +72,27 @@ static BYTE_REVERSE:[u8; 256] =
 //this function reverses bits in a given byte
 #[inline]
 pub fn reverse(x:u8) -> u8 {
-    BYTE_REVERSE[x as uint] 
+    BYTE_REVERSE[x as usize] 
 }
 
 #[inline]
 pub fn get_diagonal_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_MOVE_DATA[sq.file_and_rank() as uint].diagonal_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as usize].diagonal_mask
     }
 }
 
 #[inline]
 pub fn get_antidiagonal_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_MOVE_DATA[sq.file_and_rank() as uint].antidiagonal_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as usize].antidiagonal_mask
     }
 }
 
 #[inline]
 pub fn get_file_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_MOVE_DATA[sq.file_and_rank() as uint].file_mask;
+        let result = SQ_MOVE_DATA[sq.file_and_rank() as usize].file_mask;
         debug_assert!(!result.is_empty(), "file tables are not initialized");
         result
     }
@@ -101,7 +101,7 @@ pub fn get_file_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_knight_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_MOVE_DATA[sq.file_and_rank() as uint].knight_moves_mask;
+        let result = SQ_MOVE_DATA[sq.file_and_rank() as usize].knight_moves_mask;
         debug_assert!(!result.is_empty(), "knight tables are not initialized");
         result
 
@@ -111,7 +111,7 @@ pub fn get_knight_moves_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_king_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        let result = SQ_MOVE_DATA[sq.file_and_rank() as uint].king_moves_mask;
+        let result = SQ_MOVE_DATA[sq.file_and_rank() as usize].king_moves_mask;
         debug_assert!(!result.is_empty(), "king tables are not initialized");
         result
     }
@@ -120,33 +120,33 @@ pub fn get_king_moves_mask(sq:Square) -> BitSet {
 #[inline]
 pub fn get_white_pawn_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_MOVE_DATA[sq.file_and_rank() as uint].white_pawn_moves_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as usize].white_pawn_moves_mask
     }
 }
 
 #[inline]
 pub fn get_white_pawn_attacks_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_MOVE_DATA[sq.file_and_rank() as uint].white_pawn_attacks_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as usize].white_pawn_attacks_mask
     }
 }
 
 #[inline]
 pub fn get_black_pawn_moves_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_MOVE_DATA[sq.file_and_rank() as uint].black_pawn_moves_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as usize].black_pawn_moves_mask
     }
 }
 
 #[inline]
 pub fn get_black_pawn_attacks_mask(sq:Square) -> BitSet {
     unsafe {
-        SQ_MOVE_DATA[sq.file_and_rank() as uint].black_pawn_attacks_mask
+        SQ_MOVE_DATA[sq.file_and_rank() as usize].black_pawn_attacks_mask
     }
 }
 
 #[inline]
-pub fn get_random_number(n:uint) -> u64 {
+pub fn get_random_number(n:usize) -> u64 {
     unsafe {
         RANDOM_NUMBERS[n]
     }
@@ -159,7 +159,8 @@ pub fn init_tables() {
 }
 
 fn init_random_numbers() {
-    use std::rand::{Isaac64Rng, SeedableRng, Rng};
+    use rand::isaac::Isaac64Rng;
+    use rand::{SeedableRng, Rng};
     let seed:&[u64] = &[
         0xe0d639d1dacd02beu64,
         0xef96c10706fd5913u64,
@@ -171,7 +172,7 @@ fn init_random_numbers() {
     ];
     let mut generator:Isaac64Rng = SeedableRng::from_seed(seed); 
     unsafe {
-        for i in range(0, RANDOM_NUMBERS.len()) {
+        for i in 0..RANDOM_NUMBERS.len() {
             RANDOM_NUMBERS[i] = generator.next_u64();
         }
     }
@@ -179,31 +180,31 @@ fn init_random_numbers() {
 
 fn init_move_data() {
     let mut file_mask = 0x0101010101010101u64; //all active bits on a file where sq belongs
-    for file in range(0i, 8) {
-        let file_byte = 1u8 << file as uint; //byte with one active bit number file
-        for rank in range(0i, 8) {
+    for file in 0..8is {
+        let file_byte = 1u8 << file as usize; //byte with one active bit number file
+        for rank in 0..8is {
             let sq = Square::new(file as u8, rank as u8);
             let sq_set = BitSet::from_one_square(sq);
-            let diagonal_mask = shift(file_byte, 0u, 0 - rank) |
-                                shift(file_byte, 1u, 1 - rank) |
-                                shift(file_byte, 2u, 2 - rank) |
-                                shift(file_byte, 3u, 3 - rank) |
-                                shift(file_byte, 4u, 4 - rank) |
-                                shift(file_byte, 5u, 5 - rank) |
-                                shift(file_byte, 6u, 6 - rank) |
-                                shift(file_byte, 7u, 7 - rank);
+            let diagonal_mask = shift(file_byte, 0us, 0 - rank) |
+                                shift(file_byte, 1us, 1 - rank) |
+                                shift(file_byte, 2us, 2 - rank) |
+                                shift(file_byte, 3us, 3 - rank) |
+                                shift(file_byte, 4us, 4 - rank) |
+                                shift(file_byte, 5us, 5 - rank) |
+                                shift(file_byte, 6us, 6 - rank) |
+                                shift(file_byte, 7us, 7 - rank);
 
-            let antidiagonal_mask = shift(file_byte, 0u, rank - 0) |
-                                    shift(file_byte, 1u, rank - 1) |
-                                    shift(file_byte, 2u, rank - 2) |
-                                    shift(file_byte, 3u, rank - 3) |
-                                    shift(file_byte, 4u, rank - 4) |
-                                    shift(file_byte, 5u, rank - 5) |
-                                    shift(file_byte, 6u, rank - 6) |
-                                    shift(file_byte, 7u, rank - 7);
+            let antidiagonal_mask = shift(file_byte, 0us, rank - 0) |
+                                    shift(file_byte, 1us, rank - 1) |
+                                    shift(file_byte, 2us, rank - 2) |
+                                    shift(file_byte, 3us, rank - 3) |
+                                    shift(file_byte, 4us, rank - 4) |
+                                    shift(file_byte, 5us, rank - 5) |
+                                    shift(file_byte, 6us, rank - 6) |
+                                    shift(file_byte, 7us, rank - 7);
             
             unsafe {
-                SQ_MOVE_DATA[sq.file_and_rank()  as uint] = SquareMoveData {
+                SQ_MOVE_DATA[sq.file_and_rank()  as usize] = SquareMoveData {
                     file_mask: BitSet::new(file_mask) & (!sq_set),
                     diagonal_mask: BitSet::new(diagonal_mask) & (!sq_set),
                     antidiagonal_mask: BitSet::new(antidiagonal_mask) & (!sq_set),
@@ -284,18 +285,18 @@ static FILE_GH:u64 = 0b11000000;
 
 fn clear_files(mask:u64, b:BitSet) -> BitSet {
     let mut mask64 = 0u64;
-    for _ in range(0i, 8) {
+    for _ in 0..8is {
         mask64 <<= 8;
         mask64 |= mask;
     }
     b & BitSet::new(!mask64)
 }
 
-fn shift(x:u8, base:uint, n:int) -> u64 {
+fn shift(x:u8, base:usize, n:isize) -> u64 {
     let byte = if n >= 0 {
-        x << (n as uint)
+        x << (n as usize)
     } else {
-        x >> ((-n) as uint)
+        x >> ((-n) as usize)
     };
     (byte as u64) << base * 8
 }

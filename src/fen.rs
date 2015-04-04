@@ -1,15 +1,14 @@
 use std::str::Chars;
 use std::string::String;
-use std::iter::range_step;
 use types::*;
 
 //Forsyth–Edwards Notation
-//Serialization of position into something like this:
+//Serialization of position isizeo something like this:
 //rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2
 pub fn render_fen(p:&Position) -> String {
     //rendering board rank by rank
     let mut result =  String::with_capacity(90);
-    for i in range_step(7i, -1, -1) {
+    for i in (0..8is).rev() {
         render_rank(&p.board, i as u8, &mut result);
         if i > 0 { result.push('/'); }
     }
@@ -32,17 +31,17 @@ pub fn render_fen(p:&Position) -> String {
     //en passant square
     result.push(' ');
     match p.en_passant {
-        Some(s) => result.push_str(s.to_string().as_slice()),
+        Some(s) => result.push_str(&s.to_string()),
         None => result.push('-')
     };
 
     //halfmove clock
     result.push(' ');
-    result.push_str(p.half_moves_since_action.to_string().as_slice());
+    result.push_str(&p.half_moves_since_action.to_string());
 
     //fullmove number
     result.push(' ');
-    result.push_str(p.full_moves.to_string().as_slice());
+    result.push_str(&p.full_moves.to_string());
 
     result
 }
@@ -61,21 +60,21 @@ fn render_castling(color:Color, cr:CastlingRight, result: &mut String) {
 }
 
 fn render_rank(b:&Board, rank:u8, result: &mut String) {
-    let mut skip_number = 0u;
-    for i in range(0, 8) {
+    let mut skip_number = 0us;
+    for i in 0..8 {
         match b.get_piece(Square::new(i, rank)) {
             Some(p) => {
                 if skip_number != 0 {
-                    result.push_str(skip_number.to_string().as_slice());
+                    result.push_str(&skip_number.to_string());
                     skip_number = 0;    
                 }
-                result.push_str(p.to_string().as_slice());
+                result.push_str(&p.to_string());
             }
             None => skip_number += 1
         }
     }
     if skip_number != 0 {
-        result.push_str(skip_number.to_string().as_slice());
+        result.push_str(&skip_number.to_string());
     }
 }
 
@@ -102,10 +101,10 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     try!(expect_char(&mut iter, ' ', "Space is expected after the en passant value".to_string()));
 
     //halfmove clock
-    let halfmove = try!(parse_int(&mut iter));
+    let halfmove = try!(parse_isize(&mut iter));
 
     //fullmove number
-    let full_moves = try!(parse_int(&mut iter));
+    let full_moves = try!(parse_isize(&mut iter));
 
     Ok (Position {
         board: board,
@@ -118,7 +117,7 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     })
 }
 
-fn parse_int(iter: &mut Chars) -> Result<u16 , String> {
+fn parse_isize(iter: &mut Chars) -> Result<u16 , String> {
     let mut result = 0u16;
     loop {
         match iter.next() {
@@ -128,7 +127,7 @@ fn parse_int(iter: &mut Chars) -> Result<u16 , String> {
             }
             None => break,
             Some(c) if c.is_whitespace() => break,
-            c => return Err(format!("Expected integer move value instead of {0:?}", c))
+            c => return Err(format!("Expected isizeeger move value instead of {0:?}", c))
         }
     }
     Ok (result)
@@ -151,7 +150,7 @@ fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
 fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), String> {
     let (mut white_king, mut white_queen, mut black_king, mut black_queen) 
         = (false, false, false, false);
-    let mut n = 0i;
+    let mut n = 0is;
     loop {
         match iter.next() {
             Some('k') => black_king = true,
@@ -171,7 +170,7 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
             return Err("Castling configuration is too long".to_string());  
         }
     }
-    let bools_to_castling = |&: king:bool, queen:bool| {
+    let bools_to_castling = |king:bool, queen:bool| {
         match (king, queen) {
             (true, false)  => KingCastling,
             (false, true)  => QueenCastling,
@@ -186,10 +185,10 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
 }
 
 fn parse_board(iter: &mut Chars) -> Result<Board, String> {
-    let mut rank = 7i;
+    let mut rank = 7is;
     let mut board = Board::empty();
     while rank >= 0 {
-        let mut file = 0i;
+        let mut file = 0is;
         while file < 8 {
             let sq = Square::new(file as u8, rank as u8);
             let c = match iter.next() {
@@ -218,7 +217,7 @@ fn parse_board(iter: &mut Chars) -> Result<Board, String> {
     Ok (board)   
 }
 
-fn parse_empty_squares(c: char) -> Option<int> {
+fn parse_empty_squares(c: char) -> Option<isize> {
     let n = c as u32;
     let zero = '0' as u32;
     if n <= zero {
@@ -226,7 +225,7 @@ fn parse_empty_squares(c: char) -> Option<int> {
     } else if (n - zero) > 8 {
         None
     } else {
-        Some ((n - zero) as int)
+        Some ((n - zero) as isize)
     }
 }
 
@@ -279,7 +278,7 @@ fn parse_render_fens() {
             Err(err) => panic!(format!("Failed to parse fen '{0}' with error '{1}'", fen, err))
         };
         let fen2 = render_fen(&position);
-        assert_eq!(fen, fen2.as_slice());
+        assert_eq!(fen.to_string(), fen2);
     }
 } 
 

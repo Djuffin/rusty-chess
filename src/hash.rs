@@ -7,7 +7,7 @@ pub fn calc_position_hash(position: &Position) -> u64 {
     let board = &position.board;
     for &color in [White, Black].iter() {
         for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
-            let mut squares = board.get_pieces(kind, color);
+            let squares = board.get_pieces(kind, color);
             for sq in squares {
                 result ^= piece_hash(sq, Piece(kind, color));
             }
@@ -24,9 +24,9 @@ pub fn calc_position_hash(position: &Position) -> u64 {
 fn piece_hash(sq:Square, piece:Piece) -> u64 {
     //this function returns a random number for each (square, piece) combination
     //it returns first (2 * 6 * 64) 768 random numbers from #0 to #767   
-    let index = ((piece.kind() as uint) << 7) + 
-                ((piece.color() as uint) << 6) + 
-                (sq.file_and_rank() as uint);
+    let index = ((piece.kind() as usize) << 7) + 
+                ((piece.color() as usize) << 6) + 
+                (sq.file_and_rank() as usize);
     get_random_number(index)
 }
 
@@ -34,7 +34,7 @@ fn piece_hash(sq:Square, piece:Piece) -> u64 {
 fn castling_hash(white:CastlingRight, black:CastlingRight) -> u64 {
     //this function returns random number for each possible black/white castling right combination
     //it returns 16 random numbers from #800 to #816
-    let index = (white as uint) + ((black as uint) << 2);
+    let index = (white as usize) + ((black as usize) << 2);
     get_random_number(index + 800)
 }
 
@@ -43,7 +43,7 @@ fn en_passant_hash(sq:Option<Square>) -> u64 {
     //this function returns a random number for each en pasant file
     //it returns random numbers from #820 to #827
     match sq {
-        Some(s) => get_random_number(s.file() as uint + 820),
+        Some(s) => get_random_number(s.file() as usize + 820),
         None => 0
     }
 }
@@ -83,7 +83,7 @@ fn one_piece_positions() {
         for &b_castling in [BothCastling, QueenCastling, KingCastling, NoCastling].iter() {
             for &color in [White, Black].iter() {
                 for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
-                    for sq in range(0u8, 64).map(|n| Square(n)) {
+                    for sq in (0..64u8).map(|n| Square(n)) {
                         let mut p = empty_position;
                         p.white_castling = w_castling;
                         p.black_castling = b_castling;
@@ -99,7 +99,7 @@ fn one_piece_positions() {
 
     //checking that all hashes are unique
     hashes.sort();
-    for i in range(1, hashes.len()) {
+    for i in 1..hashes.len() {
         assert!(hashes[i] != hashes[i - 1]);
     }
 }
@@ -113,15 +113,15 @@ fn position_tree_hashes() {
 
     //positions with equal hashes should be queal
     positions.sort();
-    for i in range(1, positions.len()) {
-        if positions[i].as_slice().slice_to(16) == positions[i - 1].as_slice().slice_to(16) {
+    for i in 1..positions.len() {
+        if positions[i][0..16] == positions[i - 1][0..16] {
             assert_eq!(positions[i], positions[i - 1]);
         }
     }
 }
 
 
-fn perft(p: &Position, depth:uint, positions: &mut Vec<String>){
+fn perft(p: &Position, depth:usize, positions: &mut Vec<String>){
     let hash = calc_position_hash(p);
     positions.push(format!("{:016x} - {}", hash, render_fen(p)));
     if depth > 0 { 

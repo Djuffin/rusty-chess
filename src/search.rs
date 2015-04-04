@@ -15,7 +15,7 @@ struct Search {
     top_line: Line
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct Window {
     alpha: Score, //min score that whites can already count on
     beta: Score   //max score that blacks can already count on
@@ -27,9 +27,9 @@ struct Line {
     children: Vec<Line>
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 struct PositionInfo {
-    depth: uint,
+    depth: usize,
     score: Score,
     win: Window
 }
@@ -37,7 +37,7 @@ struct PositionInfo {
 impl SearchEngine {
     pub fn new() -> SearchEngine {
         SearchEngine {
-            evaluator: box SimpleEvaluator::new(),
+            evaluator: Box::new(SimpleEvaluator::new()),
             search_cache: HashMap::new()
         }
     }
@@ -56,25 +56,25 @@ impl Search {
     }
 
 
-    pub fn top_moves(&self, n:uint) -> Vec<Move> {
+    pub fn top_moves(&self, n:usize) -> Vec<Move> {
         let mut result:Vec<Move> = Vec::with_capacity(n);
-        for i in range(0, min(n, self.top_line.children.len())) {
+        for i in 0..min(n, self.top_line.children.len()) {
             result.push(self.top_line.children[i].mv);
         }
         result
     }
 
-    pub fn calculate_lines(&mut self, search_engine: &mut SearchEngine, depth:uint) {
+    pub fn calculate_lines(&mut self, search_engine: &mut SearchEngine, depth:usize) {
         let window = Window { alpha: -INFINITY, beta:INFINITY };
         self.top_line.score = alphabeta(search_engine, &self.position, &mut self.top_line, window, depth);
     }
 
 }
 
-fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, win: Window, depth: uint ) -> Score {
+fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, win: Window, depth: usize ) -> Score {
     let very_bad_score = if pos.next_to_move == White { -INFINITY } else { INFINITY };
     if line.children.is_empty() {
-        let mut moves = pos.gen_moves();
+        let moves = pos.gen_moves();
         let (size, _) = moves.size_hint();
         line.children.reserve(size);
         for mv in moves {
@@ -143,10 +143,10 @@ fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, 
 }
 
 
-pub fn search(pos: &Position, depth: uint) -> Option<Move> {
+pub fn search(pos: &Position, depth: usize) -> Option<Move> {
     let mut search = Search::new(pos);
     let mut search_engine = SearchEngine::new();
-    for i in range(0, depth + 1) {
+    for i in 0..depth + 1 {
         search.calculate_lines(&mut search_engine, i);
     }
     let moves = search.top_moves(3);

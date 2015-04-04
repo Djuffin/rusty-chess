@@ -2,7 +2,7 @@
 use types::*;
 pub use self::GameStage::*;
 
-#[derive(PartialEq, Show, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum GameStage {
     Opening, Middlegame, Endgame
 }
@@ -45,6 +45,12 @@ pub struct SimpleEvaluator {
     white_endgame_king_weights : [i8; 64],
     black_endgame_king_weights : [i8; 64]
 
+}
+
+impl Clone for SimpleEvaluator {
+    fn clone(&self) -> Self {
+            *self
+    }
 }
 
 impl SimpleEvaluator {
@@ -206,9 +212,9 @@ impl SimpleEvaluator {
         };
 
         if piece.color() == White {
-            table[sq.file_and_rank() as uint] as Score
+            table[sq.file_and_rank() as usize] as Score
         } else {
-            -table[sq.file_and_rank() as uint] as Score
+            -table[sq.file_and_rank() as usize] as Score
         } 
     }
 }
@@ -240,11 +246,11 @@ impl Evaluator for SimpleEvaluator {
 
 fn mirror_weights_table(table: &[i8; 64]) -> [i8; 64] {
     let mut result = [0i8; 64]; 
-    for rank in range(0, 8) {
-        for file in range(0, 8) {
+    for rank in 0..8 {
+        for file in 0..8 {
             let input_sq = Square::new(file, rank);
             let output_sq = Square::new(file, 7 - rank);
-            result[output_sq.file_and_rank() as uint] = table[input_sq.file_and_rank() as uint];
+            result[output_sq.file_and_rank() as usize] = table[input_sq.file_and_rank() as usize];
         } 
     }
     result

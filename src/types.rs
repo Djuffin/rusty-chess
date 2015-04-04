@@ -1,5 +1,4 @@
 use std::fmt;
-use std::iter::range_step;
 use bitset::{BitSet, SquareIter};
 pub use self::Color::*;
 pub use self::Kind::*;
@@ -7,12 +6,12 @@ pub use self::CastlingRight::*;
 pub use self::Move::*;
 
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum Kind {
     Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum Color {
     White = 0, Black = 1
 }
@@ -27,7 +26,7 @@ impl Color {
     }
 }
 
-impl fmt::String for Kind {
+impl fmt::Display for Kind {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
             Pawn   => "p",
@@ -41,7 +40,7 @@ impl fmt::String for Kind {
      }
 }
 
-impl fmt::String for Color {
+impl fmt::Display for Color {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
             White => write!(f, "w"),
@@ -50,7 +49,7 @@ impl fmt::String for Color {
      }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub struct Piece (pub Kind, pub Color);
 
 impl Piece {
@@ -68,7 +67,7 @@ impl Piece {
 
 }
 
-impl fmt::String for Piece {
+impl fmt::Display for Piece {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         let c = match *self {
             Piece(Pawn,   White) => "P",
@@ -89,7 +88,7 @@ impl fmt::String for Piece {
 }
 
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub struct Square (pub u8); //file - 0..2 bits; rank - 3..5 bits. 0 based
 
 impl Square {
@@ -119,7 +118,7 @@ impl Square {
 
 }
 
-impl fmt::String for Square {
+impl fmt::Display for Square {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         write!(f, "{0}{1}", 
             ('a' as u8 + self.file()) as char,
@@ -129,7 +128,7 @@ impl fmt::String for Square {
 }
 
 
-#[derive(PartialEq, Eq, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum CastlingRight {
     NoCastling = 0, QueenCastling = 1, KingCastling = 2, BothCastling = 3
 }
@@ -153,7 +152,7 @@ impl CastlingRight {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub struct OrdinalMoveInfo {
     pub from: Square,
     pub to : Square,
@@ -161,7 +160,7 @@ pub struct OrdinalMoveInfo {
     pub promotion : Option<Kind>
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Show)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum Move {
     OrdinalMove (OrdinalMoveInfo),
     CastleKingSide,
@@ -181,7 +180,7 @@ impl Move {
     }
 }
 
-impl fmt::String for Move {
+impl fmt::Display for Move {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
             CastleKingSide => write!(f, "O-O"),
@@ -203,7 +202,7 @@ impl fmt::String for Move {
 
 
 
-#[derive(PartialEq, Eq, Copy, Show)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Board {
     pub whites:  BitSet,
     pub blacks:  BitSet,
@@ -312,11 +311,11 @@ impl Board {
 
 }
 
-impl fmt::String for Board {
+impl fmt::Display for Board {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         try!(writeln!(f, ""));
-        for rank in range_step(7i, -1, -1) {
-            for file in range(0i, 8) {
+        for rank in (0..8is).rev() {
+            for file in 0..8is {
                 let sq = Square::new(file as u8, rank as u8);
                 match self.get_piece(sq) {
                     Some (p) => try!(write!(f, "{0}", p )),
@@ -331,7 +330,7 @@ impl fmt::String for Board {
 }
 
 
-#[derive(PartialEq, Eq, Copy, Show)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Position {
     pub board : Board,
     pub full_moves : u16,

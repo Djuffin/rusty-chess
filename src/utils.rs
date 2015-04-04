@@ -21,9 +21,11 @@ pub fn reverse(x:u8) -> u8 {
 }
 
 pub fn write_to_log(line: String) {
-    use std::io::{File, Append, ReadWrite};
-    let p = Path::new("rchess.log");
-    let mut file = match File::open_mode(&p, Append, ReadWrite) {
+    use std::fs::OpenOptions;
+    use std::io::Write;
+    let mb_file = OpenOptions::new().read(true).write(true)
+            .append(true).open("rchess.log");
+    let mut file = match mb_file {
         Ok(f) => f,
         Err(e) => panic!("file error: {}", e),
     };

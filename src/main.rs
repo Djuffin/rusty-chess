@@ -1,11 +1,9 @@
 #![crate_name = "rchess"]
 #![crate_type = "bin"]
-#![feature(int_uint)] 
-#![allow(unstable)]
-#![feature(box_syntax)]
+#![allow(dead_code)]
+#![allow(non_upper_case_globals)]
+extern crate rand;
 
-#[allow(dead_code)]
-#[allow(non_upper_case_globals)]
 mod squares;
 
 mod bitset;

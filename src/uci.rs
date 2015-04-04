@@ -11,21 +11,21 @@ pub use self::Command::*;
 pub use self::Response::*;
 
 
-#[derive(PartialEq, Show, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct UciMove {
     from:Square,
     to:Square,
     promotion:Option<Kind>
 }
 
-#[derive(PartialEq, Show, Copy)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum SearchOption {
-    MovetimeMsc(uint),
-    Depth(uint),
+    MovetimeMsc(usize),
+    Depth(usize),
     Infinity
 }
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 pub enum Command {
     CmdUci,
     CmdIsReady,
@@ -37,7 +37,7 @@ pub enum Command {
     CmdUnknown
 }
 
-#[derive(PartialEq, Show)]
+#[derive(PartialEq, Debug)]
 pub enum Response {
     RspId (String, String),
     RspUciOk,
@@ -46,12 +46,12 @@ pub enum Response {
     RspInfo (String),
 }
 
-#[derive(Copy, Show)]
+#[derive(Clone, Copy, Debug)]
 pub struct UciEngine {
     position: Position
 }
 
-impl fmt::String for UciMove {
+impl fmt::Display for UciMove {
     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match self.promotion {
             Some(promo) => 
@@ -62,7 +62,7 @@ impl fmt::String for UciMove {
     }
 }
 
-impl fmt::String for Response {
+impl fmt::Display for Response {
     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match *self {
             RspId(ref name, ref value) => write!(f, "id {} {}", name, value),
@@ -84,9 +84,11 @@ impl UciEngine {
 
     pub fn main_loop(&mut self) {
         use std::io;
-        for line in io::stdin().lock().lines() {
+        use std::io::BufRead;
+        let stdin = io::stdin();
+        for line in stdin.lock().lines() {
             let line = line.unwrap();
-            let cmd = match parse_command(line.as_slice()) {
+            let cmd = match parse_command(&line) {
                 Ok(cmd) => cmd,
                 Err(_) => CmdUnknown 
             };
@@ -223,7 +225,7 @@ fn uci_to_move(board: &Board, mv: &UciMove) -> Move {
 }
 
 pub fn parse_command(line: &str) -> Result<Command, String> {
-    let line = if line.ends_with("\n") { line.slice_to(line.len() - 1) } else { line };
+    let line = if line.ends_with("\n") { &line[0..line.len() - 1] } else { line };
     if line.starts_with("ucinewgame") {
         return Ok(CmdUciNewGame);
     }    
@@ -244,22 +246,22 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
             Some(index) => index + 1,
             None => return Err("fen or startpos is expected after 'position' command".to_string())
         };
-        let mut position_str = line.slice_from(position_index);
+        let mut position_str = &line[position_index..line.len()];
         let position = if position_str.starts_with("startpos") {
             //initial position
             parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap()
         } else {
             if position_str.starts_with("fen") {
-                position_str = position_str.slice_from("fen".len())
+                position_str = &position_str["fen".len().. position_str.len()]
             }
             try!(parse_fen(skip_spaces(position_str)))
         };
-        let moves_index = match line.find_str("moves ") {
+        let moves_index = match line.find("moves ") {
             Some(index) => index + "moves ".len(),
             None => 0
         };
         let moves:Vec<UciMove> = if moves_index > 0 && moves_index < line.len() {
-            try!(parse_moves(line.slice_from(moves_index))) 
+            try!(parse_moves(&line[moves_index..line.len()])) 
         } else {
             Vec::new()
         };
@@ -270,7 +272,7 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
             Some(index) => index + 1,
             None => return Ok(CmdGo(Infinity))
         };
-        let option = try!(pares_search_option(line.slice_from(option_index)));
+        let option = try!(pares_search_option(&line[option_index..line.len()]));
         return Ok(CmdGo(option));         
     }
     Err(format!("Unexpected command {}", line))
@@ -278,17 +280,17 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
 
 fn pares_search_option(input: &str) -> Result<SearchOption, String> {
     if input.starts_with("movetime") {
-        let num_str = skip_spaces(input.slice_from("movetime".len()));
-        let time:uint = match FromStr::from_str(num_str) {
-            Some(t) => t,
-            None => { return Err("Movetime is invalid or not provided".to_string()); }
+        let num_str = skip_spaces(&input["movetime".len()..input.len()]);
+        let time:usize = match FromStr::from_str(num_str) {
+            Ok(t) => t,
+            _ => { return Err("Movetime is invalid or not provided".to_string()); }
         };
         return Ok (MovetimeMsc(time));
     } else if input.starts_with("depth") {
-        let num_str = skip_spaces(input.slice_from("depth".len()));
-        let depth:uint = match FromStr::from_str(num_str) {
-            Some(t) => t,
-            None => { return Err("Depth is invalid or not provided".to_string()); }
+        let num_str = skip_spaces(&input["depth".len()..input.len()]);
+        let depth:usize = match FromStr::from_str(num_str) {
+            Ok(t) => t,
+            _ => { return Err("Depth is invalid or not provided".to_string()); }
         };
         return Ok (Depth(depth));
     } else {
@@ -297,10 +299,10 @@ fn pares_search_option(input: &str) -> Result<SearchOption, String> {
 }
 
 fn skip_spaces<'a>(s: &'a str) ->&'a str {
-    let index = s.find(|&: c: char| !c.is_whitespace());
+    let index = s.find(|c: char| !c.is_whitespace());
     match index {
-        Some(i) => s.slice_from(i),
-        None => s.slice_from(s.len())
+        Some(i) => &s[i..s.len()],
+        None => &s[s.len()..s.len()]
     }
 }
 

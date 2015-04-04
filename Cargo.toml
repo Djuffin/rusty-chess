@@ -1,0 +1,12 @@
+[package]
+
+name = "rusty-chess"
+version = "0.0.1"
+authors = [ "Eugene Zemtsov <e.zemtsov@gmail.com>" ]
+
+[[bin]]
+
+name = "rchess"
+
+[dependencies]
+rand = "0.3.7"

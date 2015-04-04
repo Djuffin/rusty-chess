@@ -1,7 +1,7 @@
 use fen::parse_fen;
 use types::*;
 
-fn perft(p: &Position, depth:uint) -> u64 {
+fn perft(p: &Position, depth:usize) -> u64 {
     if depth == 0 { return 1; }
     let mut iter = p.gen_moves();
     if depth == 1 {
@@ -17,7 +17,7 @@ fn perft(p: &Position, depth:uint) -> u64 {
     }
 }
 
-fn assert_perft(fen:&str, expected_results:&[u64], depth:uint) {
+fn assert_perft(fen:&str, expected_results:&[u64], depth:usize) {
     assert!(depth > 0);
     println!("testing: {}, depth {}", fen, depth);
     let pos = parse_fen(fen).unwrap();

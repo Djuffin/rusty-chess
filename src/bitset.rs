@@ -1,15 +1,13 @@
 use std::fmt;
-use std::iter::range_step;
-use std::num::Int;
 use types::Square;
 use std::ops::{BitAnd, BitOr, BitXor, Not, Add, Sub, Shl, Shr};
 
-#[derive(PartialEq, Eq, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct BitSet {
     pub bits:u64
 }
 
-#[derive(Copy)]
+#[derive(Clone, Copy)]
 pub struct SquareIter {
     bits:u64
 }
@@ -32,7 +30,7 @@ impl BitSet {
 
     #[inline]
     pub fn from_one_square(sq: Square) -> BitSet {
-        BitSet { bits : 1u64 << sq.file_and_rank() as uint }
+        BitSet { bits : 1u64 << sq.file_and_rank() as usize }
     }
 
     #[inline]
@@ -52,7 +50,7 @@ impl BitSet {
 
     #[inline]
     pub fn get_rank(self, rank:u8) -> u8 {
-        (self.bits >> (rank * 8u8) as uint) as u8
+        (self.bits >> (rank * 8u8) as usize) as u8
     }
 
     #[inline]
@@ -66,8 +64,8 @@ impl BitSet {
     }
 
     #[inline]
-    pub fn count(self) -> uint {
-        self.bits.count_ones()
+    pub fn count(self) -> usize {
+        self.bits.count_ones() as usize
     }
 
 }
@@ -87,8 +85,8 @@ impl Iterator for SquareIter {
     }
 
     #[inline]
-    fn size_hint(&self) -> (uint, Option<uint>) {
-        let count = self.bits.count_ones() as uint; 
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let count = self.bits.count_ones() as usize; 
         (count, Some(count))    
     }  
 }
@@ -174,10 +172,10 @@ impl Shr<usize> for BitSet {
     }
 }
 
-impl fmt::Show for BitSet {
+impl fmt::Display for BitSet {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        for rank in range_step(7i, -1, -1) {
-            for file in range(0i, 8) {
+        for rank in (0..8is).rev() {
+            for file in 0..8 {
                 let sq = Square::new(file as u8, rank as u8);
                 let c = if self.get(sq) { '*' } else {'.'};
                 try!(write!(f, "{0}", c ));
@@ -188,10 +186,10 @@ impl fmt::Show for BitSet {
      }
 }
 
-impl fmt::String for SquareIter {
+impl fmt::Display for SquareIter {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "["));
-        let mut cp = *self;
+        let cp = *self;
         for sq in cp {
             try!(write!(f, "{0} ", sq));    
         }
