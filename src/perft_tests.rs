@@ -3,7 +3,7 @@ use types::*;
 
 fn perft(p: &Position, depth:usize) -> u64 {
     if depth == 0 { return 1; }
-    let mut iter = p.gen_moves();
+    let iter = p.gen_moves();
     if depth == 1 {
         iter.count() as u64
     } else {

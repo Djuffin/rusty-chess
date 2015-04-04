@@ -523,7 +523,7 @@ fn get_pieces_test() {
     for &color in [White, Black].iter() {
         for &kind in [Pawn, Bishop, Knight, Rook, Queen, King].iter() {
             let board = initial_position.board;
-            let mut squares = board.get_pieces(kind, color);
+            let squares = board.get_pieces(kind, color);
             for sq in squares {
                 assert_eq!(board.get_piece(sq), Some(Piece(kind, color)));
             }

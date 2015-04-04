@@ -344,8 +344,8 @@ fn gen_rank_sliding_moves(occupied_set:BitSet, sq:Square) -> BitSet {
     use tables::reverse;
     let rank_blockers_mask:u8 = occupied_set.get_rank(sq.rank());
     let piece_mask:u8 = 1u8 << sq.file() as usize;
-    let rank_attack = (rank_blockers_mask - (piece_mask << 1)) ^ 
-                      reverse(reverse(rank_blockers_mask) - (reverse(piece_mask) << 1));
+    let rank_attack = (rank_blockers_mask.wrapping_sub(piece_mask << 1)) ^ 
+                      reverse(reverse(rank_blockers_mask).wrapping_sub(reverse(piece_mask) << 1));
     BitSet::new( (rank_attack as u64) << (sq.rank() * 8) as usize )
 }
 
@@ -404,7 +404,7 @@ fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
 }
 
 fn prepare_moves(kind: Kind, from:Square, squares:&[Square]) -> Vec<Move> {
-    let mut it = squares.iter().map(|to_sq| Move::new(kind, from, *to_sq, None));
+    let it = squares.iter().map(|to_sq| Move::new(kind, from, *to_sq, None));
     let mut result:Vec<Move> = it.collect();
     result.sort();
     result

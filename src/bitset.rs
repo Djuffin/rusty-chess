@@ -113,7 +113,7 @@ impl Add for BitSet {
 
     #[inline]
     fn add(self, rhs: BitSet) -> BitSet {
-        BitSet { bits : self.bits + rhs.bits }
+        BitSet { bits :  self.bits.wrapping_add(rhs.bits) }
     }
 }
 
@@ -122,7 +122,7 @@ impl Sub for BitSet {
 
     #[inline]
     fn sub(self, rhs: BitSet) -> BitSet {
-        BitSet { bits : self.bits - rhs.bits }
+        BitSet { bits : self.bits.wrapping_sub(rhs.bits) }
     }
 }
 
