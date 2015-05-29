@@ -101,10 +101,10 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     try!(expect_char(&mut iter, ' ', "Space is expected after the en passant value".to_string()));
 
     //halfmove clock
-    let halfmove = try!(parse_isize(&mut iter));
+    let halfmove = try!(parse_uint(&mut iter));
 
     //fullmove number
-    let full_moves = try!(parse_isize(&mut iter));
+    let full_moves = try!(parse_uint(&mut iter));
 
     Ok (Position {
         board: board,
@@ -117,7 +117,7 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     })
 }
 
-fn parse_isize(iter: &mut Chars) -> Result<u16 , String> {
+fn parse_uint(iter: &mut Chars) -> Result<u16 , String> {
     let mut result = 0u16;
     loop {
         match iter.next() {
