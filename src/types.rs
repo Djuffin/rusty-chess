@@ -314,8 +314,8 @@ impl Board {
 impl fmt::Display for Board {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         try!(writeln!(f, ""));
-        for rank in (0..8is).rev() {
-            for file in 0..8is {
+        for rank in (0..8).rev() {
+            for file in 0..8 {
                 let sq = Square::new(file as u8, rank as u8);
                 match self.get_piece(sq) {
                     Some (p) => try!(write!(f, "{0}", p )),

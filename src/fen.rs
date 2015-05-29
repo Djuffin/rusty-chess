@@ -8,7 +8,7 @@ use types::*;
 pub fn render_fen(p:&Position) -> String {
     //rendering board rank by rank
     let mut result =  String::with_capacity(90);
-    for i in (0..8is).rev() {
+    for i in (0..8).rev() {
         render_rank(&p.board, i as u8, &mut result);
         if i > 0 { result.push('/'); }
     }
@@ -60,7 +60,7 @@ fn render_castling(color:Color, cr:CastlingRight, result: &mut String) {
 }
 
 fn render_rank(b:&Board, rank:u8, result: &mut String) {
-    let mut skip_number = 0us;
+    let mut skip_number = 0;
     for i in 0..8 {
         match b.get_piece(Square::new(i, rank)) {
             Some(p) => {
@@ -150,7 +150,7 @@ fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
 fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), String> {
     let (mut white_king, mut white_queen, mut black_king, mut black_queen) 
         = (false, false, false, false);
-    let mut n = 0is;
+    let mut n = 0;
     loop {
         match iter.next() {
             Some('k') => black_king = true,
@@ -185,10 +185,10 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
 }
 
 fn parse_board(iter: &mut Chars) -> Result<Board, String> {
-    let mut rank = 7is;
+    let mut rank = 7;
     let mut board = Board::empty();
     while rank >= 0 {
-        let mut file = 0is;
+        let mut file = 0;
         while file < 8 {
             let sq = Square::new(file as u8, rank as u8);
             let c = match iter.next() {

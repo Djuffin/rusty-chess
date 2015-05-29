@@ -180,28 +180,28 @@ fn init_random_numbers() {
 
 fn init_move_data() {
     let mut file_mask = 0x0101010101010101u64; //all active bits on a file where sq belongs
-    for file in 0..8is {
+    for file in 0..8 {
         let file_byte = 1u8 << file as usize; //byte with one active bit number file
-        for rank in 0..8is {
+        for rank in 0..8 {
             let sq = Square::new(file as u8, rank as u8);
             let sq_set = BitSet::from_one_square(sq);
-            let diagonal_mask = shift(file_byte, 0us, 0 - rank) |
-                                shift(file_byte, 1us, 1 - rank) |
-                                shift(file_byte, 2us, 2 - rank) |
-                                shift(file_byte, 3us, 3 - rank) |
-                                shift(file_byte, 4us, 4 - rank) |
-                                shift(file_byte, 5us, 5 - rank) |
-                                shift(file_byte, 6us, 6 - rank) |
-                                shift(file_byte, 7us, 7 - rank);
+            let diagonal_mask = shift(file_byte, 0, 0 - rank) |
+                                shift(file_byte, 1, 1 - rank) |
+                                shift(file_byte, 2, 2 - rank) |
+                                shift(file_byte, 3, 3 - rank) |
+                                shift(file_byte, 4, 4 - rank) |
+                                shift(file_byte, 5, 5 - rank) |
+                                shift(file_byte, 6, 6 - rank) |
+                                shift(file_byte, 7, 7 - rank);
 
-            let antidiagonal_mask = shift(file_byte, 0us, rank - 0) |
-                                    shift(file_byte, 1us, rank - 1) |
-                                    shift(file_byte, 2us, rank - 2) |
-                                    shift(file_byte, 3us, rank - 3) |
-                                    shift(file_byte, 4us, rank - 4) |
-                                    shift(file_byte, 5us, rank - 5) |
-                                    shift(file_byte, 6us, rank - 6) |
-                                    shift(file_byte, 7us, rank - 7);
+            let antidiagonal_mask = shift(file_byte, 0, rank - 0) |
+                                    shift(file_byte, 1, rank - 1) |
+                                    shift(file_byte, 2, rank - 2) |
+                                    shift(file_byte, 3, rank - 3) |
+                                    shift(file_byte, 4, rank - 4) |
+                                    shift(file_byte, 5, rank - 5) |
+                                    shift(file_byte, 6, rank - 6) |
+                                    shift(file_byte, 7, rank - 7);
             
             unsafe {
                 SQ_MOVE_DATA[sq.file_and_rank()  as usize] = SquareMoveData {
@@ -285,7 +285,7 @@ static FILE_GH:u64 = 0b11000000;
 
 fn clear_files(mask:u64, b:BitSet) -> BitSet {
     let mut mask64 = 0u64;
-    for _ in 0..8is {
+    for _ in 0..8 {
         mask64 <<= 8;
         mask64 |= mask;
     }

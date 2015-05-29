@@ -174,7 +174,7 @@ impl Shr<usize> for BitSet {
 
 impl fmt::Display for BitSet {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        for rank in (0..8is).rev() {
+        for rank in (0..8).rev() {
             for file in 0..8 {
                 let sq = Square::new(file as u8, rank as u8);
                 let c = if self.get(sq) { '*' } else {'.'};
