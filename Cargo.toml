@@ -9,4 +9,11 @@ authors = [ "Eugene Zemtsov <e.zemtsov@gmail.com>" ]
 name = "rchess"
 
 [dependencies]
-rand = "0.3.7"
+rand = "0.3.8"
+
+[profile.test]
+opt-level = 3
+debug = true
+rpath = false
+lto = true
+debug-assertions = true
