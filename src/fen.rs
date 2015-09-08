@@ -3,7 +3,7 @@ use std::string::String;
 use types::*;
 
 //Forsyth–Edwards Notation
-//Serialization of position isizeo something like this:
+//Serialization of position into something like this:
 //rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2
 pub fn render_fen(p:&Position) -> String {
     //rendering board rank by rank
