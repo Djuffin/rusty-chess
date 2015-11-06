@@ -9,7 +9,7 @@ authors = [ "Eugene Zemtsov <e.zemtsov@gmail.com>" ]
 name = "rchess"
 
 [dependencies]
-rand = "0.3.8"
+rand = "0.3.11"
 
 [profile.test]
 opt-level = 3
