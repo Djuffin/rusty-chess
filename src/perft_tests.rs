@@ -36,7 +36,7 @@ fn assert_perft(fen:&str, expected_results:&[u64], depth:usize) {
 
 #[test]
 fn initial_position_suite() {
-    //source: https://chessprogramming.wikispaces.com/Perft+Results
+    //source: https://www.chessprogramming.org/Perft_Results
     ::tables::init_tables();  
     let depth = 6;  
 
@@ -45,7 +45,7 @@ fn initial_position_suite() {
 
 #[test]
 fn kiwipete_suite() {
-    //source: https://chessprogramming.wikispaces.com/Perft+Results
+    //source: https://www.chessprogramming.org/Perft_Results
     ::tables::init_tables();  
     let depth = 5;  
 
@@ -54,7 +54,7 @@ fn kiwipete_suite() {
 
 #[test]
 fn steven_edwards_suite() {
-    //source: https://chessprogramming.wikispaces.com/Perft+Results
+    //source: https://www.chessprogramming.org/Perft_Results
     ::tables::init_tables();  
     let depth = 5;  
 
@@ -63,7 +63,7 @@ fn steven_edwards_suite() {
 
 #[test]
 fn chessprogramming_wiki_suite() {
-    //source: https://chessprogramming.wikispaces.com/Perft+Results
+    //source: https://www.chessprogramming.org/Perft_Results
     ::tables::init_tables();  
     let depth = 6;  
 

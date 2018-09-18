@@ -20,7 +20,7 @@ pub trait Evaluator {
 }
 
 
-//very simple position evaluation based mostly on https://chessprogramming.wikispaces.com/Simplified+evaluation+function
+//very simple position evaluation based mostly on https://www.chessprogramming.org/Simplified_Evaluation_Function
 #[derive(Copy)]
 pub struct SimpleEvaluator {
     //arrays that eastimate relative value of each a piece in each square

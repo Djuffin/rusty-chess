@@ -3,8 +3,8 @@ use bitset::BitSet;
 
 //Dirty bit tricks are used in move_gen 
 //see more here:
-//https://chessprogramming.wikispaces.com/Efficient+Generation+of+Sliding+Piece+Attacks
-//https://chessprogramming.wikispaces.com/Hyperbola+Qusizeessence
+//https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks
+//https://www.chessprogramming.org/Hyperbola_Quintessence
 
 pub struct LegalMovesIterator {
     moves_iter: MovesIterator
