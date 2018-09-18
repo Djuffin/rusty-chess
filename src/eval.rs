@@ -53,6 +53,7 @@ impl Clone for SimpleEvaluator {
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl SimpleEvaluator {
     pub fn new() -> SimpleEvaluator {
         let white_pawn_weights : [i8; 64] = mirror_weights_table(
@@ -190,32 +191,32 @@ impl SimpleEvaluator {
     fn eval_one_piece_position(&self, piece: Piece, sq:Square, stage: GameStage) -> Score {
         let table = match piece {
             Piece(Pawn, White) => self.white_pawn_weights,
-            Piece(Pawn, Black) => self.black_pawn_weights,  
+            Piece(Pawn, Black) => self.black_pawn_weights,
 
             Piece(Knight, White) => self.white_knight_weights,
-            Piece(Knight, Black) => self.black_knight_weights,  
+            Piece(Knight, Black) => self.black_knight_weights,
 
             Piece(Bishop, White) => self.white_bishop_weights,
-            Piece(Bishop, Black) => self.black_bishop_weights,  
+            Piece(Bishop, Black) => self.black_bishop_weights,
 
             Piece(Rook, White) => self.white_rook_weights,
-            Piece(Rook, Black) => self.black_rook_weights,  
+            Piece(Rook, Black) => self.black_rook_weights,
 
             Piece(Queen, White) => self.white_queen_weights,
-            Piece(Queen, Black) => self.black_queen_weights,  
+            Piece(Queen, Black) => self.black_queen_weights,
 
             Piece(King, White) if stage == Endgame => self.white_endgame_king_weights,
             Piece(King, White) => self.white_king_weights,
 
             Piece(King, Black) if stage == Endgame => self.black_endgame_king_weights,
-            Piece(King, Black) => self.black_king_weights, 
+            Piece(King, Black) => self.black_king_weights,
         };
 
         if piece.color() == White {
             table[sq.file_and_rank() as usize] as Score
         } else {
             -table[sq.file_and_rank() as usize] as Score
-        } 
+        }
     }
 }
 
@@ -237,7 +238,7 @@ impl Evaluator for SimpleEvaluator {
 
         if position.full_moves < 8 {
             return Opening;
-        } 
+        }
 
         Middlegame
     }
@@ -245,13 +246,13 @@ impl Evaluator for SimpleEvaluator {
 
 
 fn mirror_weights_table(table: &[i8; 64]) -> [i8; 64] {
-    let mut result = [0i8; 64]; 
+    let mut result = [0i8; 64];
     for rank in 0..8 {
         for file in 0..8 {
             let input_sq = Square::new(file, rank);
             let output_sq = Square::new(file, 7 - rank);
             result[output_sq.file_and_rank() as usize] = table[input_sq.file_and_rank() as usize];
-        } 
+        }
     }
     result
 }
@@ -266,7 +267,7 @@ fn simple_eval_test() {
     let evaluator = SimpleEvaluator::new();
 
     //eval for whites
-    let position = parse_fen("N7/1BR5/8/3Q4/4P3/8/8/8 w KQkq - 0 1").unwrap(); 
+    let position = parse_fen("N7/1BR5/8/3Q4/4P3/8/8/8 w KQkq - 0 1").unwrap();
     //score = (100 for a pawn) + (320 for a knight) + (330 for a bishop) + (500 for a rook) + (900 for a queen) = 2150
     //knight on a8 = -50
     //bishop on b7 = 0
@@ -279,12 +280,12 @@ fn simple_eval_test() {
     assert_eq!(score, 2135);
 
     //initial position
-    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap(); 
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
     let score = evaluator.eval(&position);
     assert_eq!(score, 0);
 
     //middle game position
-    let position = parse_fen("qk5r/8/8/3K4/8/8/8/R6Q w - - 0 40").unwrap(); 
+    let position = parse_fen("qk5r/8/8/3K4/8/8/8/R6Q w - - 0 40").unwrap();
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Middlegame);
     let score = evaluator.eval(&position);
@@ -293,10 +294,10 @@ fn simple_eval_test() {
     //black king in b8 = 30
     //result = -50 - 30 = -80
     //rooks and queens nullify each other
-    assert_eq!(score, -80); 
+    assert_eq!(score, -80);
 
     //endgame position
-    let position = parse_fen("k7/8/8/3K4/8/8/8/8 w - - 0 40").unwrap(); 
+    let position = parse_fen("k7/8/8/3K4/8/8/8/8 w - - 0 40").unwrap();
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Endgame);
     let score = evaluator.eval(&position);
@@ -311,22 +312,22 @@ fn simple_eval_test() {
 fn classify_test() {
     let evaluator = SimpleEvaluator::new();
 
-    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1").unwrap(); 
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1").unwrap();
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Opening);
 
-    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 9").unwrap(); 
+    let position = parse_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 9").unwrap();
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Middlegame);
 
-    let position = parse_fen("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w - - 0 9").unwrap(); 
+    let position = parse_fen("rnb1kbnr/pppppppp/8/8/8/8/PPPPPPPP/RNB1KBNR w - - 0 9").unwrap();
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Endgame);
 
-    let position = parse_fen("2bqk3/pppppppp/8/8/8/8/PPPPPPPP/3QKN2 w - - 0 9").unwrap(); 
+    let position = parse_fen("2bqk3/pppppppp/8/8/8/8/PPPPPPPP/3QKN2 w - - 0 9").unwrap();
     let stage = evaluator.classify(&position);
     assert_eq!(stage, Endgame);
-    
+
 
 }
 

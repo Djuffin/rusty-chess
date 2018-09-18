@@ -48,10 +48,10 @@ pub fn render_fen(p:&Position) -> String {
 
 fn render_castling(color:Color, cr:CastlingRight, result: &mut String) {
     let s = match (color, cr) {
-        (White, QueenCastling) => "Q", 
+        (White, QueenCastling) => "Q",
         (White, KingCastling)  => "K",
         (White, BothCastling)  => "KQ",
-        (Black, QueenCastling) => "q", 
+        (Black, QueenCastling) => "q",
         (Black, KingCastling)  => "k",
         (Black, BothCastling)  => "kq",
         (_, NoCastling) => ""
@@ -66,7 +66,7 @@ fn render_rank(b:&Board, rank:u8, result: &mut String) {
             Some(p) => {
                 if skip_number != 0 {
                     result.push_str(&skip_number.to_string());
-                    skip_number = 0;    
+                    skip_number = 0;
                 }
                 result.push_str(&p.to_string());
             }
@@ -113,7 +113,7 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
         full_moves : full_moves,
         next_to_move : next_to_move,
         white_castling : white_castling,
-        black_castling : black_castling        
+        black_castling : black_castling
     })
 }
 
@@ -144,11 +144,11 @@ fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
         Some('6') => 5u8,
         c => return Err(format!("Unexpected en passant value: {0:?}", c))
     };
-    Ok(Some(Square::new(file as u8, rank))) 
+    Ok(Some(Square::new(file as u8, rank)))
 }
 
 fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), String> {
-    let (mut white_king, mut white_queen, mut black_king, mut black_queen) 
+    let (mut white_king, mut white_queen, mut black_king, mut black_queen)
         = (false, false, false, false);
     let mut n = 0;
     loop {
@@ -157,17 +157,17 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
             Some('K') => white_king = true,
             Some('q') => black_queen = true,
             Some('Q') => white_queen = true,
-            Some('-') if !(white_king && white_queen && black_queen && black_king) => 
-                { 
+            Some('-') if !(white_king && white_queen && black_queen && black_king) =>
+                {
                     expect_char(iter, ' ', "Space is expected after next to castling".to_string())?;
-                    return Ok ((NoCastling, NoCastling)) 
+                    return Ok ((NoCastling, NoCastling))
                 }
             Some(' ') => break,
-            c => { return Err(format!("Unexpected castling configuration {0:?}", c)) } 
+            c => { return Err(format!("Unexpected castling configuration {0:?}", c)) }
         };
         n += 1;
         if n > 4 {
-            return Err("Castling configuration is too long".to_string());  
+            return Err("Castling configuration is too long".to_string());
         }
     }
     let bools_to_castling = |king:bool, queen:bool| {
@@ -176,7 +176,7 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
             (false, true)  => QueenCastling,
             (true, true)   => BothCastling,
             (false, false) => NoCastling
-        } 
+        }
     };
 
     let white_castling = bools_to_castling(white_king, white_queen);
@@ -214,7 +214,7 @@ fn parse_board(iter: &mut Chars) -> Result<Board, String> {
         }
         rank -= 1;
     }
-    Ok (board)   
+    Ok (board)
 }
 
 fn parse_empty_squares(c: char) -> Option<isize> {
@@ -250,8 +250,8 @@ fn parse_piece(c: char) -> Result<Piece, String> {
 fn expect_char(iter :&mut Chars, expected:char, err_msg:String) -> Result<(), String> {
     match iter.next() {
         Some(c) if c == expected => Ok (()),
-        _ => Err(err_msg) 
-    }    
+        _ => Err(err_msg)
+    }
 }
 
 #[cfg(test)]
@@ -269,8 +269,8 @@ fn parse_render_fens() {
         "r2q1rk1/1p1nbppp/p2pbn2/4p3/4P3/1NN1BP2/PPPQ2PP/2KR1B1R w - - 5 11",
         "8/8/8/8/8/8/8/8 w - - 200 999",
         "r3k3/8/8/8/8/8/8/4K2R w Kq - 0 1",
-        "pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp b Qk a3 23 21"        
-    ];   
+        "pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp/pppppppp b Qk a3 23 21"
+    ];
 
     for &fen in test_fens.iter() {
         let position = match parse_fen(fen) {
@@ -280,6 +280,6 @@ fn parse_render_fens() {
         let fen2 = render_fen(&position);
         assert_eq!(fen.to_string(), fen2);
     }
-} 
+}
 
 }

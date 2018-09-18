@@ -1,7 +1,7 @@
 use types::*;
 use bitset::BitSet;
 
-//Dirty bit tricks are used in move_gen 
+//Dirty bit tricks are used in move_gen
 //see more here:
 //https://www.chessprogramming.org/Efficient_Generation_of_Sliding_Piece_Attacks
 //https://www.chessprogramming.org/Hyperbola_Quintessence
@@ -54,14 +54,14 @@ impl Iterator for MovesIterator {
                 return None
             }
             self.can_gen_more = self.gen_more_moves();
-        } 
+        }
         self.moves_cache.pop()
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        (self.moves_cache.len(), None)    
-    }  
+        (self.moves_cache.len(), None)
+    }
 }
 impl MovesIterator {
     pub fn new(pos: &Position) -> MovesIterator {
@@ -89,10 +89,10 @@ impl MovesIterator {
                     for to_sq in moves_set.iter() {
                         result.push(squares_to_move(Queen, from_sq, to_sq));
                     }
-                } 
+                }
                 self.next_kind = Rook;
-                true           
-           } 
+                true
+           }
            Rook => {
                 for from_sq in board.get_pieces(Rook, color) {
                     let moves_set = gen_rook_moves(occupied_set, friendly_set, from_sq);
@@ -109,7 +109,7 @@ impl MovesIterator {
                     for to_sq in moves_set.iter() {
                         result.push(squares_to_move(Bishop, from_sq, to_sq));
                     }
-                }            
+                }
                 self.next_kind = Knight;
                 true
            }
@@ -128,9 +128,9 @@ impl MovesIterator {
                                         Some(s) => BitSet::from_one_square(s),
                                         None => BitSet::empty()
                                      };
-                 
+
                 if color == White {
-                    let pawn_enemy_set = board.get_color_bitset(Black) | en_passant_set;        
+                    let pawn_enemy_set = board.get_color_bitset(Black) | en_passant_set;
                     for from_sq in board.get_pieces(Pawn, color) {
                         let moves_set = gen_white_pawn_moves(occupied_set, pawn_enemy_set, from_sq);
                         add_pawn_moves(result, from_sq, moves_set);
@@ -141,7 +141,7 @@ impl MovesIterator {
                         let moves_set = gen_black_pawn_moves(occupied_set, pawn_enemy_set, from_sq);
                         add_pawn_moves(result, from_sq, moves_set);
                     }
-                }            
+                }
                 self.next_kind = King;
                 true
            },
@@ -154,13 +154,13 @@ impl MovesIterator {
                 }
 
                 //castling
-                let (castle_rank, queen_castle_allowed, king_castle_allowed) = 
+                let (castle_rank, queen_castle_allowed, king_castle_allowed) =
                     match (color, pos.white_castling, pos.black_castling) {
-                    (White, QueenCastling, _) => (0, true,  false), 
+                    (White, QueenCastling, _) => (0, true,  false),
                     (White, KingCastling, _)  => (0, false, true),
                     (White, BothCastling, _)  => (0, true,  true),
-                    (Black, _, QueenCastling) => (7, true,  false),   
-                    (Black, _, KingCastling)  => (7, false, true),  
+                    (Black, _, QueenCastling) => (7, true,  false),
+                    (Black, _, KingCastling)  => (7, false, true),
                     (Black, _, BothCastling)  => (7, true,  true),
                     (White, NoCastling, _)| (Black, _, NoCastling)  => (3, false, false)
                 };
@@ -196,7 +196,7 @@ fn is_legal_move(pos: &Position, mv: &Move) -> bool {
         (_, Black)               => new_pos.board.kings & new_pos.board.blacks,
     };
     !is_under_attack(&new_pos.board, new_pos.next_to_move, test_area)
-} 
+}
 
 pub fn is_under_attack(board: &Board, attacking_color: Color, test_area:BitSet) -> bool {
     let occupied_set = board.whites | board.blacks;
@@ -250,7 +250,7 @@ pub fn is_under_attack(board: &Board, attacking_color: Color, test_area:BitSet) 
         }
     }
     false
-} 
+}
 
 #[inline]
 fn add_pawn_moves(list:&mut Vec<Move>, from:Square, moves:BitSet) {
@@ -274,15 +274,15 @@ fn gen_white_pawn_moves(occupied_set:BitSet, enemy_set:BitSet, sq:Square) -> Bit
     use tables::{get_white_pawn_moves_mask, get_white_pawn_attacks_mask};
     let free_set = if sq.rank() == 1 {
         //free_set is a set of squares a pawn can go to.
-        //We copy all occupied squares on 3rd rank to 4th rank in order 
-        //to account for the fact that if pawn can't step one square 
-        //it also can't step two squares at a time. 
+        //We copy all occupied squares on 3rd rank to 4th rank in order
+        //to account for the fact that if pawn can't step one square
+        //it also can't step two squares at a time.
         !(occupied_set | BitSet::new(occupied_set.get_rank(2) as u64) << 8 * 3)
     } else {
         !occupied_set
     };
-    (get_white_pawn_moves_mask(sq) & free_set) 
-        | (get_white_pawn_attacks_mask(sq) & enemy_set) 
+    (get_white_pawn_moves_mask(sq) & free_set)
+        | (get_white_pawn_attacks_mask(sq) & enemy_set)
 }
 
 pub fn gen_black_pawn_moves(occupied_set:BitSet, enemy_set:BitSet, sq:Square) -> BitSet {
@@ -293,11 +293,11 @@ pub fn gen_black_pawn_moves(occupied_set:BitSet, enemy_set:BitSet, sq:Square) ->
     } else {
         !occupied_set
     };
-    (get_black_pawn_moves_mask(sq) & free_set) 
-        | (get_black_pawn_attacks_mask(sq) & enemy_set) 
+    (get_black_pawn_moves_mask(sq) & free_set)
+        | (get_black_pawn_attacks_mask(sq) & enemy_set)
 }
 
-//generate rook moves on a given board from a given square 
+//generate rook moves on a given board from a given square
 //we don't check that rook is acutally there
 fn gen_rook_moves(occupied_set:BitSet, friendly_set:BitSet, sq:Square) -> BitSet {
     let rank_move_set = gen_rank_sliding_moves(occupied_set, sq);
@@ -306,7 +306,7 @@ fn gen_rook_moves(occupied_set:BitSet, friendly_set:BitSet, sq:Square) -> BitSet
     (rank_move_set | file_move_set) & !friendly_set
 }
 
-//generate bishop moves on a given board from a given square 
+//generate bishop moves on a given board from a given square
 //we don't check that bishop is acutally there
 fn gen_bishop_moves(occupied_set:BitSet, friendly_set:BitSet, sq:Square) -> BitSet {
     let diag_move_set     = gen_diagonal_sliding_moves(occupied_set, sq);
@@ -315,7 +315,7 @@ fn gen_bishop_moves(occupied_set:BitSet, friendly_set:BitSet, sq:Square) -> BitS
     (diag_move_set | antidiag_move_set) & !friendly_set
 }
 
-//generate queen moves on a given board from a given square 
+//generate queen moves on a given board from a given square
 //we don't check that queen is acutally there
 fn gen_queen_moves(occupied_set:BitSet, friendly_set:BitSet, sq:Square) -> BitSet {
     let diag_move_set     = gen_diagonal_sliding_moves(occupied_set, sq);
@@ -323,7 +323,7 @@ fn gen_queen_moves(occupied_set:BitSet, friendly_set:BitSet, sq:Square) -> BitSe
     let rank_move_set     = gen_rank_sliding_moves(occupied_set, sq);
     let file_move_set     = gen_file_sliding_moves(occupied_set, sq);
 
-    (diag_move_set | antidiag_move_set | rank_move_set | file_move_set) 
+    (diag_move_set | antidiag_move_set | rank_move_set | file_move_set)
         & !friendly_set
 }
 
@@ -344,7 +344,7 @@ fn gen_rank_sliding_moves(occupied_set:BitSet, sq:Square) -> BitSet {
     use tables::reverse;
     let rank_blockers_mask:u8 = occupied_set.get_rank(sq.rank());
     let piece_mask:u8 = 1u8 << sq.file() as usize;
-    let rank_attack = (rank_blockers_mask.wrapping_sub(piece_mask << 1)) ^ 
+    let rank_attack = (rank_blockers_mask.wrapping_sub(piece_mask << 1)) ^
                       reverse(reverse(rank_blockers_mask).wrapping_sub(reverse(piece_mask) << 1));
     BitSet::new( (rank_attack as u64) << (sq.rank() * 8) as usize )
 }
@@ -395,12 +395,12 @@ use squares::*;
 fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
     let mut result:Vec<Move> = it.filter_map(|m| {
         match m {
-            OrdinalMove(mi) if mi.from == sq => Some(m), 
+            OrdinalMove(mi) if mi.from == sq => Some(m),
             _ => None
         }
     }).collect();
     result.sort();
-    result    
+    result
 }
 
 fn prepare_moves(kind: Kind, from:Square, squares:&[Square]) -> Vec<Move> {
@@ -416,7 +416,7 @@ fn assert_moves(fen:&str, from:Square, expected_moves:&[Move]) {
     let generated_moves = from_square(from, it);
     let mut expected_moves = expected_moves.to_vec();
     expected_moves.sort();
-    assert_eq!(generated_moves, expected_moves);    
+    assert_eq!(generated_moves, expected_moves);
 }
 
 fn assert_castles(fen:&str, expected_moves:&[Move]) {
@@ -431,7 +431,7 @@ fn assert_castles(fen:&str, expected_moves:&[Move]) {
     generated_moves.sort();
     let mut expected_moves = expected_moves.to_vec();
     expected_moves.sort();
-    assert_eq!(generated_moves, expected_moves);    
+    assert_eq!(generated_moves, expected_moves);
 }
 
 fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
@@ -440,20 +440,20 @@ fn assert_squares(fen:&str, from:Square, squares:&[Square]) {
     let generated_moves = from_square(from, it);
     let piece = pos.board.get_piece(from).unwrap();
     let expected_moves = prepare_moves(piece.kind(), from, squares);
-    assert_eq!(generated_moves, expected_moves);    
+    assert_eq!(generated_moves, expected_moves);
 }
 
 #[test]
 fn rook_moves_test() {
     ::tables::init_tables();
-    let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1"; 
+    let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r b - - 0 1";
     assert_squares(fen, a1, &[a2, a3, a4, a5, a6, a7, a8, b1, c1, d1, e1, g1, f1]);
     assert_squares(fen, d5, &[a5, b5, c5, d4, d6, d7, d8]);
     assert_squares(fen, e5, &[f5, g5, h5, e6, e7, e8, e4]);
     assert_squares(fen, h1, &[b1, c1, d1, e1, f1, g1, h2, h3, h4, h5, h6, h7, h8]);
 
     //same but white to move
-    let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r w - - 0 1"; 
+    let fen = "R6R/8/8/3rr3/3RR3/8/8/r6r w - - 0 1";
     assert_squares(fen, a8, &[a1, a2, a3, a4, a5, a6, a7, b8, c8, d8, e8, f8, g8]);
     assert_squares(fen, d4, &[a4, b4, c4, d5, d3, d2, d1]);
     assert_squares(fen, e4, &[f4, g4, h4, e5, e3, e2, e1]);
@@ -463,7 +463,7 @@ fn rook_moves_test() {
 #[test]
 fn bishop_moves_test() {
     ::tables::init_tables();
-    let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B w - - 0 1"; 
+    let fen = "b7/8/8/8/2bB4/8/pP2Pp2/7B w - - 0 1";
     assert_squares(fen, d4, &[c3, e5, f6, g7, h8, a7, b6, c5, e3, f2]);
     assert_squares(fen, h1, &[a8, b7, c6, d5, e4, f3, g2]);
 
@@ -475,8 +475,8 @@ fn bishop_moves_test() {
 #[test]
 fn queen_moves_test() {
     ::tables::init_tables();
-    let fen = "Q7/8/5q2/8/8/2Q5/8/8 w - - 0 1"; 
-    assert_squares(fen, a8, &[a1, a2, a3, a4, a5, a6, a7, 
+    let fen = "Q7/8/5q2/8/8/2Q5/8/8 w - - 0 1";
+    assert_squares(fen, a8, &[a1, a2, a3, a4, a5, a6, a7,
                              b8, c8, d8, e8, f8, g8, h8,
                              b7, c6, d5, e4, f3, g2, h1]);
     assert_squares(fen, c3, &[a3, b3, d3, e3, f3, g3, h3,
@@ -495,7 +495,7 @@ fn queen_moves_test() {
 fn knight_moves_test() {
     ::tables::init_tables();
     let fen = "N7/8/7p/4n3/6n1/8/5p2/8 w - - 0 1";
-    assert_squares(fen, a8, &[b6, c7]);  
+    assert_squares(fen, a8, &[b6, c7]);
 
     let fen = "N7/8/7p/4n3/6n1/8/5p2/8 b - - 0 1";
     assert_squares(fen, e5, &[c6, d7, c4, d3, f3, f7, g6]);
@@ -521,7 +521,7 @@ fn pawn_moves_test() {
     ::tables::init_tables();
     let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 w - - 0 1";
 
-    assert_squares(fen, a2, &[a3, a4]);    
+    assert_squares(fen, a2, &[a3, a4]);
     assert_squares(fen, b4, &[b5]);
     assert_squares(fen, g3, &[g4]);
     assert_moves(fen, d7, &[
@@ -535,7 +535,7 @@ fn pawn_moves_test() {
         Move::new(Pawn, d7, e8, Some(Knight))
     ]);
 
-    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 b - b3 0 1";    
+    let fen = "4q3/3P2p1/5N1N/4p3/1Pp1p3/2K3P1/P7/8 b - b3 0 1";
 
     assert_squares(fen, c4, &[b3]);
     assert_squares(fen, e5, &[]);
@@ -543,4 +543,4 @@ fn pawn_moves_test() {
     assert_squares(fen, g7, &[f6, h6, g6, g5]);
 }
 
-} 
+}

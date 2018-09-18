@@ -44,7 +44,7 @@ impl BitSet {
         if value {
             self.bits |= s.bits
         } else {
-            self.bits &= !s.bits 
+            self.bits &= !s.bits
         }
     }
 
@@ -86,9 +86,9 @@ impl Iterator for SquareIter {
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let count = self.bits.count_ones() as usize; 
-        (count, Some(count))    
-    }  
+        let count = self.bits.count_ones() as usize;
+        (count, Some(count))
+    }
 }
 
 impl SquareIter {
@@ -96,7 +96,7 @@ impl SquareIter {
     fn new(bits: u64) -> SquareIter {
         SquareIter { bits:bits }
     }
-  
+
 }
 
 impl BitAnd for BitSet {
