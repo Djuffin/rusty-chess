@@ -160,15 +160,11 @@ pub fn init_tables() {
 
 fn init_random_numbers() {
     use rand::isaac::Isaac64Rng;
-    use rand::{SeedableRng, Rng};
-    let seed:&[u64] = &[
-        0xe0d639d1dacd02beu64,
-        0xef96c10706fd5913u64,
-        0x2ecb7a7419590303u64,
-        0x109a590b6eeb408cu64,
-        0x532c075b28329e05u64,
-        0x25bb59f5b8a75bd1u64,
-        0x676ace4d6694cd1du64
+    use rand::{SeedableRng, RngCore};
+    let seed:[u8; 32] = [
+        229,   79,    3,  118,  104,  249,  112,  138,  108,   72,   41,  246,  255,
+        161,   69,   43,   60,   56,   36,  244,   86,   12,  204,  234,  163,  106,
+        80,  142,  152,  191,    5,   95
     ];
     let mut generator:Isaac64Rng = SeedableRng::from_seed(seed); 
     unsafe {

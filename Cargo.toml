@@ -3,17 +3,18 @@
 name = "rusty-chess"
 version = "0.0.1"
 authors = [ "Eugene Zemtsov <e.zemtsov@gmail.com>" ]
+autobins = false
 
 [[bin]]
-
 name = "rchess"
 
 [dependencies]
-rand = "0.3.11"
+rand = "0.5.5"
 
 [profile.test]
 opt-level = 3
 debug = true
 rpath = false
 lto = true
+incremental = false
 debug-assertions = true
