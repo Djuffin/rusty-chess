@@ -178,9 +178,9 @@ impl fmt::Display for BitSet {
             for file in 0..8 {
                 let sq = Square::new(file as u8, rank as u8);
                 let c = if self.get(sq) { '*' } else {'.'};
-                try!(write!(f, "{0}", c ));
+                write!(f, "{0}", c )?;
             }
-            try!(write!(f, "{0}", "\n"));
+            write!(f, "{0}", "\n")?;
         }
         Ok (())
      }
@@ -188,12 +188,12 @@ impl fmt::Display for BitSet {
 
 impl fmt::Display for SquareIter {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "["));
+        write!(f, "[")?;
         let cp = *self;
         for sq in cp {
-            try!(write!(f, "{0} ", sq));    
+            write!(f, "{0} ", sq)?;
         }
-        try!(write!(f, "]"));
+        write!(f, "]")?;
         Ok (())
      }
 }

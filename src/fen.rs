@@ -82,8 +82,8 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
     let mut iter = input.chars();
 
     //read board
-    let board = try!(parse_board(&mut iter));
-    try!(expect_char(&mut iter, ' ', "Space is expected after board description".to_string()));
+    let board = parse_board(&mut iter)?;
+    expect_char(&mut iter, ' ', "Space is expected after board description".to_string())?;
 
     //read next to move
     let next_to_move = match iter.next() {
@@ -91,20 +91,20 @@ pub fn parse_fen(input:&str) -> Result<Position, String> {
         Some('b') => Black,
         c => { return Err(format!("'b' or 'w' is expected for next to move instead of {0:?}", c)) }
     };
-    try!(expect_char(&mut iter, ' ', "Space is expected after next to move color".to_string()));
+    expect_char(&mut iter, ' ', "Space is expected after next to move color".to_string())?;
 
     //read castlings
-    let (white_castling, black_castling) = try!(parse_castlings(&mut iter));
+    let (white_castling, black_castling) = parse_castlings(&mut iter)?;
 
     //read en passant
-    let en_passant = try!(parse_en_passant(&mut iter));
-    try!(expect_char(&mut iter, ' ', "Space is expected after the en passant value".to_string()));
+    let en_passant = parse_en_passant(&mut iter)?;
+    expect_char(&mut iter, ' ', "Space is expected after the en passant value".to_string())?;
 
     //halfmove clock
-    let halfmove = try!(parse_uint(&mut iter));
+    let halfmove = parse_uint(&mut iter)?;
 
     //fullmove number
-    let full_moves = try!(parse_uint(&mut iter));
+    let full_moves = parse_uint(&mut iter)?;
 
     Ok (Position {
         board: board,
@@ -159,7 +159,7 @@ fn parse_castlings(iter: &mut Chars) -> Result<(CastlingRight, CastlingRight), S
             Some('Q') => white_queen = true,
             Some('-') if !(white_king && white_queen && black_queen && black_king) => 
                 { 
-                    try!(expect_char(iter, ' ', "Space is expected after next to castling".to_string()));
+                    expect_char(iter, ' ', "Space is expected after next to castling".to_string())?;
                     return Ok ((NoCastling, NoCastling)) 
                 }
             Some(' ') => break,
@@ -203,14 +203,14 @@ fn parse_board(iter: &mut Chars) -> Result<Board, String> {
                     file += n;
                 },
                 None => {
-                    let piece = try!(parse_piece(c));
+                    let piece = parse_piece(c)?;
                     board.set_piece(sq, piece);
                     file += 1;
                 }
             };
         }
         if rank != 0 {
-            try!(expect_char(iter, '/', format!("Rank delimiter / is expected after rank {0}", rank + 1)));
+            expect_char(iter, '/', format!("Rank delimiter / is expected after rank {0}", rank + 1))?;
         }
         rank -= 1;
     }

@@ -8,7 +8,7 @@ pub use self::Move::*;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum Kind {
-    Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5 
+    Pawn = 0, Bishop = 1, Knight = 2, Rook = 3, Queen = 4, King = 5
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
@@ -110,7 +110,7 @@ impl Square {
     }
 
     #[inline(always)]
-    pub fn new(file: u8, rank:u8) -> Square { 
+    pub fn new(file: u8, rank:u8) -> Square {
         debug_assert!(file < 8);
         debug_assert!(rank < 8);
         Square ((rank << 3) + file )
@@ -120,9 +120,9 @@ impl Square {
 
 impl fmt::Display for Square {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{0}{1}", 
+        write!(f, "{0}{1}",
             ('a' as u8 + self.file()) as char,
-            ('1' as u8 + self.rank()) as char 
+            ('1' as u8 + self.rank()) as char
         )
      }
 }
@@ -186,15 +186,15 @@ impl fmt::Display for Move {
             CastleKingSide => write!(f, "O-O"),
             CastleQueenSide => write!(f, "O-O-O"),
             NullMove => write!(f, "null-move"),
-            OrdinalMove (ref of) => {  
+            OrdinalMove (ref of) => {
                 match of.promotion {
-                    Some(promo) => 
+                    Some(promo) =>
                         write!(f, "{0} {1}-{2}={3}", of.kind, of.from, of.to, promo),
-                    None => 
+                    None =>
                         write!(f, "{0} {1}-{2}", of.kind, of.from, of.to)
                 }
             }
-                
+
 
         }
      }
@@ -211,7 +211,7 @@ pub struct Board {
     pub knights: BitSet,
     pub rooks:   BitSet,
     pub queens:  BitSet,
-    pub kings:   BitSet 
+    pub kings:   BitSet
 }
 
 impl Board {
@@ -251,7 +251,7 @@ impl Board {
         self.kings   = self.kings   & not_sq;
 
         self.whites  = self.whites  & not_sq;
-        self.blacks  = self.blacks  & not_sq; 
+        self.blacks  = self.blacks  & not_sq;
     }
 
     //retutns a piece located at a given square (if any)
@@ -289,7 +289,7 @@ impl Board {
         (pieces_bitset & color_bitset).iter()
     }
 
-    #[inline] 
+    #[inline]
     pub fn get_color_bitset(self, color:Color) -> BitSet {
         match color {
             White => self.whites,
@@ -313,17 +313,17 @@ impl Board {
 
 impl fmt::Display for Board {
      fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
-        try!(writeln!(f, ""));
+        writeln!(f, "")?;
         for rank in (0..8).rev() {
             for file in 0..8 {
                 let sq = Square::new(file as u8, rank as u8);
                 match self.get_piece(sq) {
-                    Some (p) => try!(write!(f, "{0}", p )),
-                    None => try!(write!(f, ".")) 
+                    Some (p) => write!(f, "{0}", p )?,
+                    None => write!(f, ".")?
                 }
-                
+
             }
-            try!(write!(f, "\n"));
+            write!(f, "\n")?;
         }
         Ok (())
      }
@@ -358,17 +358,17 @@ impl Position {
     pub fn apply_move(&mut self, mv:&Move) -> Option<Piece> {
         use squares::*;
         let color = self.next_to_move;
-        match *mv { 
+        match *mv {
             OrdinalMove (ref mi) => {
                 let mut captured_piece = self.board.get_piece(mi.to);
-                debug_assert!(self.board.get_piece(mi.from).expect("src sq is empty").kind() 
+                debug_assert!(self.board.get_piece(mi.from).expect("src sq is empty").kind()
                     == mi.kind, "move piece is inconsistent with board piece");
                 self.board.clear_square(mi.from);
                 match mi.kind {
                     Queen | Bishop | Knight | Rook => {
                         self.board.set_piece(mi.to, Piece(mi.kind, color));
                         self.update_stats_after_move(captured_piece.is_some());
-                        if mi.kind == Rook { 
+                        if mi.kind == Rook {
                             self.remove_rook_castling_right(mi.from, color);
                         }
                     },
@@ -377,7 +377,7 @@ impl Position {
                         debug_assert!(mi.promotion.is_none() || mi.to.rank() == 7 || mi.to.rank() == 0,
                             "promotion before final rank");
                         self.board.set_piece(mi.to, Piece(piece_after_move, color));
-                        
+
                         //en passant capture
                         if Some(mi.to) == self.en_passant {
                             let jump_rank = match color {
@@ -389,13 +389,13 @@ impl Position {
                             debug_assert!(captured_piece.expect("en passant capture of empty sq")
                                 .kind() == Pawn, "en passant capture of not a pawn");
                             self.board.clear_square(jump_sq);
-                        } 
+                        }
 
                         self.update_stats_after_move(true);
                         //en passant move
                         if color == Black && mi.from.rank() == 6 && mi.to.rank() == 4 {
                             self.en_passant = Some (Square::new(mi.to.file(), 5));
-                        } 
+                        }
                         else if color == White && mi.from.rank() == 1 && mi.to.rank() == 3 {
                             self.en_passant = Some (Square::new(mi.to.file(), 2));
                         }
@@ -406,7 +406,7 @@ impl Position {
                         self.remove_king_castling_right(color);
                     }
                 }
-                debug_assert!(captured_piece.is_none() || 
+                debug_assert!(captured_piece.is_none() ||
                     captured_piece.unwrap().color() == color.inverse(), "capturing friendly piece");
                 match captured_piece {
                     Some(Piece(Rook, _)) =>
@@ -453,7 +453,7 @@ impl Position {
                 None
             }
         }
-    } 
+    }
 
     #[inline]
     fn remove_king_castling_right(&mut self, color:Color) {
@@ -472,13 +472,13 @@ impl Position {
                 self.white_castling = self.white_castling.remove(QueenCastling);
             } else if rook_sq == h1 {
                 self.white_castling = self.white_castling.remove(KingCastling);
-            } 
+            }
         } else {
             if rook_sq == a8 {
                 self.black_castling = self.black_castling.remove(QueenCastling);
             } else if rook_sq == h8 {
                 self.black_castling = self.black_castling.remove(KingCastling);
-            }            
+            }
         }
     }
 
@@ -506,7 +506,7 @@ use squares::*;
 fn assert_squares(mut expected_sq:Vec<Square>, mut actual_sq:Vec<Square>) {
     expected_sq.sort();
     actual_sq.sort();
-    assert_eq!(expected_sq, actual_sq);    
+    assert_eq!(expected_sq, actual_sq);
 }
 
 #[test]
@@ -538,6 +538,6 @@ fn get_pieces_test() {
             assert_eq!(empty_iter.next(), None);
         }
     }
-} 
+}
 
 }

@@ -54,11 +54,11 @@ pub struct UciEngine {
 impl fmt::Display for UciMove {
     fn fmt(&self, f:&mut fmt::Formatter) -> fmt::Result {
         match self.promotion {
-            Some(promo) => 
+            Some(promo) =>
                 write!(f, "{}{}{}", self.from, self.to, promo),
-            None => 
+            None =>
                 write!(f, "{}{}", self.from, self.to)
-        }        
+        }
     }
 }
 
@@ -90,11 +90,11 @@ impl UciEngine {
             let line = line.unwrap();
             let cmd = match parse_command(&line) {
                 Ok(cmd) => cmd,
-                Err(_) => CmdUnknown 
+                Err(_) => CmdUnknown
             };
 
             let responses  = match cmd {
-                CmdUci => vec![RspId("name".to_string(), "rchess".to_string()), 
+                CmdUci => vec![RspId("name".to_string(), "rchess".to_string()),
                            RspId("author".to_string(), "EZ".to_string()), RspUciOk],
                 CmdIsReady => vec![RspReadyOk],
                 CmdUciNewGame => vec![],
@@ -150,8 +150,8 @@ fn move_to_uci(mv: &Move, color: Color) -> UciMove {
             to: mi.to,
             promotion: mi.promotion
         },
-        CastleKingSide => { 
-            if color == White  { 
+        CastleKingSide => {
+            if color == White  {
                 UciMove {
                     from: e1,
                     to: g1,
@@ -199,20 +199,20 @@ fn uci_to_move(board: &Board, mv: &UciMove) -> Move {
         if mv.from == e1 {
             if mv.to == g1 {
                 return CastleKingSide;
-            } 
+            }
             if mv.to == c1 {
                 return CastleQueenSide;
-            } 
+            }
         }
-    } 
+    }
     else if piece == Piece(King, Black) {
         if mv.from == e8 {
             if mv.to == g8 {
                 return CastleKingSide;
-            } 
+            }
             if mv.to == c8 {
                 return CastleQueenSide;
-            } 
+            }
         }
     }
 
@@ -228,10 +228,10 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
     let line = if line.ends_with("\n") { &line[0..line.len() - 1] } else { line };
     if line.starts_with("ucinewgame") {
         return Ok(CmdUciNewGame);
-    }    
+    }
     if line.starts_with("uci") {
         return Ok(CmdUci);
-    } 
+    }
     if line.starts_with("isready") {
         return Ok(CmdIsReady);
     }
@@ -254,14 +254,14 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
             if position_str.starts_with("fen") {
                 position_str = &position_str["fen".len().. position_str.len()]
             }
-            try!(parse_fen(skip_spaces(position_str)))
+            parse_fen(skip_spaces(position_str))?
         };
         let moves_index = match line.find("moves ") {
             Some(index) => index + "moves ".len(),
             None => 0
         };
         let moves:Vec<UciMove> = if moves_index > 0 && moves_index < line.len() {
-            try!(parse_moves(&line[moves_index..line.len()])) 
+            parse_moves(&line[moves_index..line.len()])?
         } else {
             Vec::new()
         };
@@ -272,11 +272,11 @@ pub fn parse_command(line: &str) -> Result<Command, String> {
             Some(index) => index + 1,
             None => return Ok(CmdGo(Infinity))
         };
-        let option = try!(pares_search_option(&line[option_index..line.len()]));
-        return Ok(CmdGo(option));         
+        let option = pares_search_option(&line[option_index..line.len()])?;
+        return Ok(CmdGo(option));
     }
     Err(format!("Unexpected command {}", line))
-} 
+}
 
 fn pares_search_option(input: &str) -> Result<SearchOption, String> {
     if input.starts_with("movetime") {
@@ -309,15 +309,15 @@ fn skip_spaces<'a>(s: &'a str) ->&'a str {
 fn parse_moves(input: &str) -> Result<Vec<UciMove>, String> {
     let mut result = Vec::<UciMove>::new();
     for move_str in input.split(' ') {
-        result.push(try!(parse_move(move_str)));
+        result.push(parse_move(move_str)?);
     }
     Ok(result)
 }
 
 fn parse_move(input: &str) -> Result<UciMove, String> {
     let mut chars = input.chars();
-    let from = try!(parse_square(&mut chars));
-    let to   = try!(parse_square(&mut chars));
+    let from = parse_square(&mut chars)?;
+    let to   = parse_square(&mut chars)?;
     let promotion = match chars.next() {
         Some('q') => Some(Queen),
         Some('n') => Some(Knight),
@@ -342,7 +342,7 @@ fn parse_square(iter: &mut Chars) -> Result<Square, String> {
         Some(c@'1'...'8') => (c as u32) - ('1' as u32),
         c => return Err(format!("Unexpected move rank: {0:?}", c))
     };
-    Ok(Square::new(file as u8, rank as u8)) 
+    Ok(Square::new(file as u8, rank as u8))
 }
 
 #[cfg(test)]
@@ -356,7 +356,7 @@ use squares::*;
 fn parse_go_command_test() {
     assert_eq!(parse_command("go infinite"), Ok(CmdGo(Infinity)));
     assert_eq!(parse_command("go"), Ok(CmdGo(Infinity)));
-    assert_eq!(parse_command("go movetime 123"), Ok(CmdGo(MovetimeMsc(123)))); 
+    assert_eq!(parse_command("go movetime 123"), Ok(CmdGo(MovetimeMsc(123))));
 }
 
 #[test]
