@@ -18,11 +18,10 @@ mod hash;
 pub mod uci;
 #[cfg(test)]
 mod perft_tests;
-
-
-
+#[cfg(test)]
+mod search_test;
 
 fn main() {
   tables::init_tables();
-  uci::UciEngine::new().main_loop();
+  uci::UciEngine::new().std_main_loop();
 }

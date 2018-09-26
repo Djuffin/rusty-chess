@@ -127,7 +127,7 @@ fn parse_uint(iter: &mut Chars) -> Result<u16 , String> {
             }
             None => break,
             Some(c) if c.is_whitespace() => break,
-            c => return Err(format!("Expected isizeeger move value instead of {0:?}", c))
+            c => return Err(format!("Expected integer move value instead of {0:?}", c))
         }
     }
     Ok (result)

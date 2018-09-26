@@ -194,8 +194,6 @@ impl fmt::Display for Move {
                         write!(f, "{0} {1}-{2}", of.kind, of.from, of.to)
                 }
             }
-
-
         }
      }
 }

@@ -2,9 +2,9 @@
 //http://wbec-ridderkerk.nl/html/UCIProtocol.html
 use types::*;
 use fen::parse_fen;
-use std::str::Chars;
+use std::str::{Chars, FromStr};
 use std::fmt;
-use std::str::FromStr;
+use std::io::{BufRead, Write};
 use search::search;
 pub use self::SearchOption::*;
 pub use self::Command::*;
@@ -82,11 +82,15 @@ impl UciEngine {
         }
     }
 
-    pub fn main_loop(&mut self) {
-        use std::io;
-        use std::io::BufRead;
-        let stdin = io::stdin();
-        for line in stdin.lock().lines() {
+    pub fn std_main_loop(&mut self) {
+        use std::io::{stdin, stdout};
+        let input = stdin();
+        let mut output = stdout();
+        self.main_loop(&mut input.lock(), &mut output);
+    }
+
+    pub fn main_loop(&mut self, input:&mut BufRead, output:&mut Write) {
+        for line in input.lines() {
             let line = line.unwrap();
             let cmd = match parse_command(&line) {
                 Ok(cmd) => cmd,
@@ -119,9 +123,10 @@ impl UciEngine {
             };
 
             for r in responses.iter() {
-                println!("{}", r);
+                write!(output, "{}\n", r);
+                output.flush().ok();
             }
-        }
+        }        
     }
 
     fn think(&self, opt: SearchOption) -> Option<Move> {
