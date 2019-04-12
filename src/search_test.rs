@@ -15,7 +15,7 @@ fn pick_best_move(fen:&str, best_move_hint:&str) -> Option<String> {
                     King   => "K",
                     Queen  => "Q"
                 };
-                (piece, of.from.to_string(), of.to.to_string()) 
+                (piece, of.from.to_string(), of.to.to_string())
             },
             _ => continue
         };
@@ -32,8 +32,8 @@ fn assert_bestmove(fen:&str, best_move_hint:&str, depth:i32) {
     println!("testing: {}, best move {} ({})", fen, best_mv, best_move_hint);
     let mut input = Cursor::new(Vec::new());
     let mut output = Cursor::new(Vec::new());
-    write!(input, "position fen {}\n", fen);
-    write!(input, "go depth {}\n", depth);
+    write!(input, "position fen {}\n", fen).unwrap();
+    write!(input, "go depth {}\n", depth).unwrap();
     input.set_position(0);
     ::uci::UciEngine::new().main_loop(&mut input, &mut output);
     let mut result = String::new();
@@ -45,7 +45,7 @@ fn assert_bestmove(fen:&str, best_move_hint:&str, depth:i32) {
 
 #[test]
 fn search_test() {
-    ::tables::init_tables();  
+    ::tables::init_tables();
     let depth = 6;
 
     assert_bestmove("1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - - 0 1", "Qd1", depth);

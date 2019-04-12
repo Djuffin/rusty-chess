@@ -1,6 +1,5 @@
 //Implementation of Universal Chess Interface (UCI)
 //http://wbec-ridderkerk.nl/html/UCIProtocol.html
-use types::*;
 use fen::parse_fen;
 use std::str::{Chars, FromStr};
 use std::fmt;
@@ -123,10 +122,10 @@ impl UciEngine {
             };
 
             for r in responses.iter() {
-                write!(output, "{}\n", r);
+                write!(output, "{}\n", r).ok();
                 output.flush().ok();
             }
-        }        
+        }
     }
 
     fn think(&self, opt: SearchOption) -> Option<Move> {

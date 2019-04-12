@@ -1,5 +1,4 @@
 //implementation of Zobrist Hashing
-use types::*;
 use tables::get_random_number;
 
 pub fn calc_position_hash(position: &Position) -> u64 {
@@ -12,20 +11,20 @@ pub fn calc_position_hash(position: &Position) -> u64 {
                 result ^= piece_hash(sq, Piece(kind, color));
             }
         }
-    } 
+    }
     result ^= castling_hash(position.white_castling, position.black_castling);
     result ^= en_passant_hash(position.en_passant);
     result ^= next_to_move_hash(position.next_to_move);
-    result   
+    result
 
 }
 
 #[inline]
 fn piece_hash(sq:Square, piece:Piece) -> u64 {
     //this function returns a random number for each (square, piece) combination
-    //it returns first (2 * 6 * 64) 768 random numbers from #0 to #767   
-    let index = ((piece.kind() as usize) << 7) + 
-                ((piece.color() as usize) << 6) + 
+    //it returns first (2 * 6 * 64) 768 random numbers from #0 to #767
+    let index = ((piece.kind() as usize) << 7) +
+                ((piece.color() as usize) << 6) +
                 (sq.file_and_rank() as usize);
     get_random_number(index)
 }
@@ -124,7 +123,7 @@ fn position_tree_hashes() {
 fn perft(p: &Position, depth:usize, positions: &mut Vec<String>){
     let hash = calc_position_hash(p);
     positions.push(format!("{:016x} - {}", hash, render_fen(p)));
-    if depth > 0 { 
+    if depth > 0 {
         for mv in p.gen_moves() {
             let mut p1 = *p;
             p1.apply_move(&mv);
