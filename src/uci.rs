@@ -5,6 +5,7 @@ use std::str::{Chars, FromStr};
 use std::fmt;
 use std::io::{BufRead, Write};
 use search::search;
+use types::*;
 pub use self::SearchOption::*;
 pub use self::Command::*;
 pub use self::Response::*;
@@ -353,7 +354,6 @@ fn parse_square(iter: &mut Chars) -> Result<Square, String> {
 mod tests {
 use uci::*;
 use fen::{parse_fen};
-use types::*;
 use squares::*;
 
 #[test]

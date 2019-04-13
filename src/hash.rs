@@ -1,5 +1,6 @@
 //implementation of Zobrist Hashing
 use tables::get_random_number;
+use types::*;
 
 pub fn calc_position_hash(position: &Position) -> u64 {
     let mut result:u64 = 0;
@@ -63,8 +64,6 @@ fn next_to_move_hash(color: Color) -> u64 {
 mod tests {
 use hash::*;
 use fen::{parse_fen, render_fen};
-use types::*;
-
 #[test]
 fn one_piece_positions() {
     ::tables::init_tables();
