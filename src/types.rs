@@ -153,7 +153,7 @@ impl CastlingRight {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
-pub struct OrdinalMoveInfo {
+pub struct OrdinaryMoveInfo {
     pub from: Square,
     pub to : Square,
     pub kind : Kind,
@@ -162,7 +162,7 @@ pub struct OrdinalMoveInfo {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Copy, Clone, Debug)]
 pub enum Move {
-    OrdinalMove (OrdinalMoveInfo),
+    OrdinaryMove (OrdinaryMoveInfo),
     CastleKingSide,
     CastleQueenSide,
     NullMove
@@ -171,7 +171,7 @@ pub enum Move {
 impl Move {
     #[inline]
     pub fn new(kind:Kind, from:Square, to:Square, promo: Option<Kind>) -> Move {
-        OrdinalMove(OrdinalMoveInfo{
+        OrdinaryMove(OrdinaryMoveInfo{
             from: from,
             to: to,
             kind: kind,
@@ -186,7 +186,7 @@ impl fmt::Display for Move {
             CastleKingSide => write!(f, "O-O"),
             CastleQueenSide => write!(f, "O-O-O"),
             NullMove => write!(f, "null-move"),
-            OrdinalMove (ref of) => {
+            OrdinaryMove (ref of) => {
                 match of.promotion {
                     Some(promo) =>
                         write!(f, "{0} {1}-{2}={3}", of.kind, of.from, of.to, promo),
@@ -357,7 +357,7 @@ impl Position {
         use squares::*;
         let color = self.next_to_move;
         match *mv {
-            OrdinalMove (ref mi) => {
+            OrdinaryMove (ref mi) => {
                 let mut captured_piece = self.board.get_piece(mi.to);
                 debug_assert!(self.board.get_piece(mi.from).expect("src sq is empty").kind()
                     == mi.kind, "move piece is inconsistent with board piece");

@@ -150,7 +150,7 @@ impl UciEngine {
 fn move_to_uci(mv: &Move, color: Color) -> UciMove {
     use squares::*;
     match *mv {
-        OrdinalMove(ref mi) => UciMove {
+        OrdinaryMove(ref mi) => UciMove {
             from: mi.from,
             to: mi.to,
             promotion: mi.promotion
@@ -221,7 +221,7 @@ fn uci_to_move(board: &Board, mv: &UciMove) -> Move {
         }
     }
 
-    OrdinalMove (OrdinalMoveInfo {
+    OrdinaryMove (OrdinaryMoveInfo {
         from: mv.from,
         to: mv.to,
         kind: piece.kind(),
