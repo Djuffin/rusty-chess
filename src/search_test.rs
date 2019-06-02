@@ -6,7 +6,7 @@ fn pick_best_move(fen:&str, best_move_hint:&str) -> Option<String> {
     let moves = ::move_gen::MovesIterator::new(&pos);
     for mv in moves {
         let (piece, from_sq, to_sq) = match mv {
-            OrdinalMove (ref of) => {
+            OrdinaryMove (ref of) => {
                 let piece = match of.kind {
                     Pawn   => "",
                     Knight => "N",

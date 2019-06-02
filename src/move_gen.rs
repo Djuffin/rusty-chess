@@ -395,7 +395,7 @@ use squares::*;
 fn from_square(sq:Square, it:MovesIterator) -> Vec<Move>{
     let mut result:Vec<Move> = it.filter_map(|m| {
         match m {
-            OrdinalMove(mi) if mi.from == sq => Some(m),
+            OrdinaryMove(mi) if mi.from == sq => Some(m),
             _ => None
         }
     }).collect();
