@@ -1,12 +1,12 @@
 use types::*;
-use eval::{SimpleEvaluator, Evaluator, INFINITY, Score}; 
+use eval::{SimpleEvaluator, Evaluator, INFINITY, Score};
 use std::cmp::{max,min};
 use std::collections::HashMap;
 
 type SearchCache = HashMap<u64, PositionInfo>;
 
 struct SearchEngine {
-    evaluator: Box<Evaluator + 'static>,
+    evaluator: Box<dyn Evaluator + 'static>,
     search_cache: SearchCache
 }
 
@@ -82,37 +82,37 @@ fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, 
                 mv: mv,
                 score: very_bad_score,
                 children: Vec::with_capacity(0)
-            });   
-        }           
+            });
+        }
     } else {
-        //Sort child moves in order of their decreasing benefit for the moving side. 
+        //Sort child moves in order of their decreasing benefit for the moving side.
         //This sort is based on the score that was obtained on previous iterations.
         //It should help us to do more pruning, since we look through better moves first.
         if pos.next_to_move == White {
             line.children.sort_by(|a, b| b.score.cmp(&a.score));
         } else {
             line.children.sort_by(|a, b| a.score.cmp(&b.score));
-        }        
+        }
     }
 
     let mut window = Window { alpha: win.alpha, beta:win.beta };
     for child in line.children.iter_mut() {
         let mut new_pos = *pos;
-        new_pos.apply_move(&child.mv);   
+        new_pos.apply_move(&child.mv);
         let hash = ::hash::calc_position_hash(&new_pos);
-        
+
         //let pi = search_engine.search_cache.find(&hash);
         //TODO: use pi value
-        
+
         let score = if depth == 0 {
             search_engine.evaluator.eval(&new_pos)
         } else {
             alphabeta(search_engine, &new_pos, child, window, depth - 1)
-        }; 
+        };
 
         search_engine.search_cache.insert(hash, PositionInfo { score:score, depth: depth, win: window });
-        
-        child.score = score;  
+
+        child.score = score;
         if pos.next_to_move == White {
             window.alpha = max(window.alpha, score);
         } else {
@@ -120,15 +120,15 @@ fn alphabeta(search_engine: &mut SearchEngine, pos: &Position, line: &mut Line, 
         }
         if window.beta <= window.alpha {
             break;
-        }                         
+        }
     }
 
     let result = if line.children.len() > 0 {
-        if pos.next_to_move == White { 
+        if pos.next_to_move == White {
             window.alpha
         } else {
             window.beta
-        }            
+        }
     } else {
         if pos.is_check() {
             //no moves available and check - checkmate

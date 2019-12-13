@@ -121,7 +121,7 @@ fn parse_uint(iter: &mut Chars) -> Result<u16 , String> {
     let mut result = 0u16;
     loop {
         match iter.next() {
-            Some(c@'0'...'9') => {
+            Some(c@'0'..='9') => {
                 result *= 10;
                 result += ((c as u32) - ('0' as u32)) as u16;
             }
@@ -135,7 +135,7 @@ fn parse_uint(iter: &mut Chars) -> Result<u16 , String> {
 
 fn parse_en_passant(iter: &mut Chars) -> Result< Option<Square> , String> {
     let file = match iter.next() {
-        Some(c@'a'...'h') => (c as u32) - ('a' as u32),
+        Some(c@'a'..='h') => (c as u32) - ('a' as u32),
         Some('-') => return Ok(None),
         c => return Err(format!("Unexpected en passant value: {0:?}", c))
     };

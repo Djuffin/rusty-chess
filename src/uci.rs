@@ -89,7 +89,7 @@ impl UciEngine {
         self.main_loop(&mut input.lock(), &mut output);
     }
 
-    pub fn main_loop(&mut self, input:&mut BufRead, output:&mut Write) {
+    pub fn main_loop(&mut self, input:&mut dyn BufRead, output:&mut dyn Write) {
         for line in input.lines() {
             let line = line.unwrap();
             let cmd = match parse_command(&line) {
@@ -340,11 +340,11 @@ fn parse_move(input: &str) -> Result<UciMove, String> {
 
 fn parse_square(iter: &mut Chars) -> Result<Square, String> {
     let file = match iter.next() {
-        Some(c@'a'...'h') => (c as u32) - ('a' as u32),
+        Some(c@'a'..='h') => (c as u32) - ('a' as u32),
         c => return Err(format!("Unexpected move file: {0:?}", c))
     };
     let rank = match iter.next() {
-        Some(c@'1'...'8') => (c as u32) - ('1' as u32),
+        Some(c@'1'..='8') => (c as u32) - ('1' as u32),
         c => return Err(format!("Unexpected move rank: {0:?}", c))
     };
     Ok(Square::new(file as u8, rank as u8))
